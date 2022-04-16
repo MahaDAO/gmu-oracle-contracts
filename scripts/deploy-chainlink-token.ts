@@ -7,36 +7,28 @@ import hre, { ethers } from "hardhat";
 import { wait } from "./utils";
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
-
-  const price = 2e6;
-  const chainlinkOracle = "0x6Ebc52C8C1089be9eB3945C4350B68B8E4C2233f";
-  const token = "0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0";
+  const chainlinkOracle = "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419";
+  const token = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
   const gmuOracle = "0x288961ee2805a1961d6a98092aa83B00F3065514";
 
-  // // We get the contract to deploy
-  // const ChainlinkTokenOracleGMU = await ethers.getContractFactory(
-  //   "ChainlinkTokenOracleGMU"
-  // );
-  // const instance = await ChainlinkTokenOracleGMU.deploy(
-  //   chainlinkOracle,
-  //   gmuOracle,
-  //   token
-  // );
+  // We get the contract to deploy
+  const ChainlinkTokenOracleGMU = await ethers.getContractFactory(
+    "ChainlinkTokenOracleGMU"
+  );
+  const instance = await ChainlinkTokenOracleGMU.deploy(
+    chainlinkOracle,
+    gmuOracle,
+    token
+  );
 
-  // await instance.deployed();
+  await instance.deployed();
 
-  // console.log("ChainlinkTokenOracleGMU deployed to:", instance.address);
+  console.log("ChainlinkTokenOracleGMU deployed to:", instance.address);
 
-  // await wait(60 * 1000); // wait for a minute
+  await wait(60 * 1000); // wait for a minute
 
   await hre.run("verify:verify", {
-    address: "0xe448dd09596Cc32677613C14F52FCd72fa0a984b",
+    address: instance.address,
     constructorArguments: [chainlinkOracle, gmuOracle, token],
   });
 }
