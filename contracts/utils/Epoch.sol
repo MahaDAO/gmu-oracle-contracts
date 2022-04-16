@@ -1,86 +1,85 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/math/Math.sol';
-import '@openzeppelin/contracts/math/SafeMath.sol';
-
-import './Operator.sol';
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { Operator } from "./Operator.sol";
 
 contract Epoch is Operator {
-    using SafeMath for uint256;
+  using SafeMath for uint256;
 
-    uint256 private period;
-    uint256 private startTime;
-    uint256 private lastExecutedAt;
+  uint256 private period;
+  uint256 private startTime;
+  uint256 private lastExecutedAt;
 
-    /* ========== CONSTRUCTOR ========== */
+  /* ========== CONSTRUCTOR ========== */
 
-    constructor(
-        uint256 _period,
-        uint256 _startTime,
-        uint256 _startEpoch
-    ) {
-        require(_startTime > block.timestamp, 'Epoch: invalid start time');
-        period = _period;
-        startTime = _startTime;
-        lastExecutedAt = startTime.add(_startEpoch.mul(period));
+  constructor(
+    uint256 _period,
+    uint256 _startTime,
+    uint256 _startEpoch
+  ) {
+    require(_startTime > block.timestamp, "Epoch: invalid start time");
+    period = _period;
+    startTime = _startTime;
+    lastExecutedAt = startTime.add(_startEpoch.mul(period));
+  }
+
+  /* ========== Modifier ========== */
+
+  modifier checkStartTime() {
+    require(block.timestamp >= startTime, "Epoch: not started yet");
+
+    _;
+  }
+
+  modifier checkEpoch() {
+    require(block.timestamp > startTime, "Epoch: not started yet");
+    require(callable(), "Epoch: not allowed");
+
+    _;
+
+    lastExecutedAt = block.timestamp;
+  }
+
+  /* ========== VIEW FUNCTIONS ========== */
+
+  function callable() public view returns (bool) {
+    return getCurrentEpoch() >= getNextEpoch();
+  }
+
+  // epoch
+  function getLastEpoch() public view returns (uint256) {
+    return lastExecutedAt.sub(startTime).div(period);
+  }
+
+  function getCurrentEpoch() public view returns (uint256) {
+    return Math.max(startTime, block.timestamp).sub(startTime).div(period);
+  }
+
+  function getNextEpoch() public view returns (uint256) {
+    if (startTime == lastExecutedAt) {
+      return getLastEpoch();
     }
+    return getLastEpoch().add(1);
+  }
 
-    /* ========== Modifier ========== */
+  function nextEpochPoint() public view returns (uint256) {
+    return startTime.add(getNextEpoch().mul(period));
+  }
 
-    modifier checkStartTime {
-        require(block.timestamp >= startTime, 'Epoch: not started yet');
+  // params
+  function getPeriod() public view returns (uint256) {
+    return period;
+  }
 
-        _;
-    }
+  function getStartTime() public view returns (uint256) {
+    return startTime;
+  }
 
-    modifier checkEpoch {
-        require(block.timestamp > startTime, 'Epoch: not started yet');
-        require(callable(), 'Epoch: not allowed');
+  /* ========== GOVERNANCE ========== */
 
-        _;
-
-        lastExecutedAt = block.timestamp;
-    }
-
-    /* ========== VIEW FUNCTIONS ========== */
-
-    function callable() public view returns (bool) {
-        return getCurrentEpoch() >= getNextEpoch();
-    }
-
-    // epoch
-    function getLastEpoch() public view returns (uint256) {
-        return lastExecutedAt.sub(startTime).div(period);
-    }
-
-    function getCurrentEpoch() public view returns (uint256) {
-        return Math.max(startTime, block.timestamp).sub(startTime).div(period);
-    }
-
-    function getNextEpoch() public view returns (uint256) {
-        if (startTime == lastExecutedAt) {
-            return getLastEpoch();
-        }
-        return getLastEpoch().add(1);
-    }
-
-    function nextEpochPoint() public view returns (uint256) {
-        return startTime.add(getNextEpoch().mul(period));
-    }
-
-    // params
-    function getPeriod() public view returns (uint256) {
-        return period;
-    }
-
-    function getStartTime() public view returns (uint256) {
-        return startTime;
-    }
-
-    /* ========== GOVERNANCE ========== */
-
-    function setPeriod(uint256 _period) external onlyOperator {
-        period = _period;
-    }
+  function setPeriod(uint256 _period) external onlyOperator {
+    period = _period;
+  }
 }
