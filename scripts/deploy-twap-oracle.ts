@@ -7,24 +7,22 @@ import hre, { ethers } from "hardhat";
 import { wait } from "./utils";
 
 async function main() {
-  const oracles = [
-    "0x93dAe7A7763f95eC86006D9f38A497773ce47380",
-    "0x6852F8bB8a476fCAD8D6a54aF4a1A61B29146484",
-  ];
+  const chainlinkOracle = "0xfb82e32bcd4d72f0688f16109193053d52a23e47";
+  const period = 86400;
 
   // We get the contract to deploy
-  const Factory = await ethers.getContractFactory("ChainlinkTWAPKeeper");
-  const instance = await Factory.deploy(oracles);
+  const TWAPOracle = await ethers.getContractFactory("TWAPOracle");
+  const instance = await TWAPOracle.deploy(chainlinkOracle, period);
 
   await instance.deployed();
 
-  console.log("ChainlinkTWAPKeeper deployed to:", instance.address);
+  console.log("TWAPOracle deployed to:", instance.address);
 
   await wait(60 * 1000); // wait for a minute
 
   await hre.run("verify:verify", {
     address: instance.address,
-    constructorArguments: [oracles],
+    constructorArguments: [chainlinkOracle, period],
   });
 }
 

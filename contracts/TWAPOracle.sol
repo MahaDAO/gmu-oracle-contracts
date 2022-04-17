@@ -32,7 +32,7 @@ contract TWAPOracle is Epoch, ITWAPOracle {
     priceHistory[lastPriceIndex] = price;
     lastPriceIndex++;
 
-    emit UpdatePriceFeed(msg.sender, oracle, price);
+    emit UpdatePriceFeed(msg.sender, address(oracle), price);
   }
 
   function fetchPrice() external view override returns (uint256) {
