@@ -30,13 +30,23 @@ const config: HardhatUserConfig = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    bsc: {
+      url: "https://bsc-dataseed.binance.org/",
+      chainId: 56,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      polygon: process.env.POLYGONSCAN_API_KEY,
+      bsc: process.env.BSCSCAN_API_KEY,
+      mainnet: process.env.ETHERSCAN_API_KEY,
+    },
   },
 };
 

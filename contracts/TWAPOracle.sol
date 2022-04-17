@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import { Epoch } from "./utils/Epoch.sol";
-import { IPriceFeed } from "./interfaces/IPriceFeed.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Epoch} from "./utils/Epoch.sol";
+import {IPriceFeed, ITWAPOracle} from "./interfaces/ITWAPOracle.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract TWAPOracle is Epoch, IPriceFeed {
+contract TWAPOracle is Epoch, ITWAPOracle {
   using SafeMath for uint256;
 
   IPriceFeed public oracle;
@@ -27,13 +27,16 @@ contract TWAPOracle is Epoch, IPriceFeed {
     priceHistory[3] = price;
   }
 
-  function updatePrice() public checkEpoch {
-    priceHistory[lastPriceIndex] = oracle.fetchPrice();
+  function updatePrice() external override checkEpoch {
+    uint256 price = oracle.fetchPrice();
+    priceHistory[lastPriceIndex] = price;
     lastPriceIndex++;
+
+    emit UpdatePriceFeed(msg.sender, oracle, price);
   }
 
   function fetchPrice() external view override returns (uint256) {
-    require(!callable(), "price is stale");
+    require(!_callable(), "price is stale");
 
     uint256 priceTotal = 0;
     for (uint256 index = lastPriceIndex; index > lastPriceIndex - 3; index--) {
