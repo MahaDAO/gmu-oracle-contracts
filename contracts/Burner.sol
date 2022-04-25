@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IERC20Burnable} from "./interfaces/IERC20Burnable.sol";
 import {IAppreciatingOracle} from "./interfaces/IAppreciatingOracle.sol";
 import {Epoch} from "./utils/Epoch.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /**
  * This contract is reponsible for burning ARTH based on the fees collected from the protocol.
@@ -11,6 +12,8 @@ import {Epoch} from "./utils/Epoch.sol";
  * So if 1% of ARTH supply is burnt, then ARTH appreciates by 1% respectively.
  */
 contract Burner is Epoch {
+  using SafeMath for uint256;
+
   string public name;
   IERC20Burnable public arth;
   IAppreciatingOracle oracle;
@@ -36,6 +39,16 @@ contract Burner is Epoch {
     // we should appreciate ARTH by?
     uint256 percOfSupplyBurned = toBurn.mul(1e9).div(supply);
 
-    uint256 price = oracle.getPrice();
+    // find out how much we should appreciate ARTH by given the collateral
+    // info...
+    uint256 percOfCollateralAppreciation = 0;
+
+    // this is how much we should appreciate ARTH by...
+    uint256 percOfAppreciation = percOfCollateralAppreciation.add(
+      percOfSupplyBurned
+    );
+
+    uint256 priceOld = oracle.getPrice();
+    oracle.setPrice(priceOld.mul(percOfAppreciation).div(1e9));
   }
 }
