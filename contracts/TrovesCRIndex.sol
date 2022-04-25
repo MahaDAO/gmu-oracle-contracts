@@ -17,11 +17,10 @@ contract TrovesCRIndex is Ownable, Epoch, IOracle {
   struct Trove {
     ITroveManager manager;
     IGovernance governance;
-    // IPriceFeed priceFeed;
   }
 
   uint256 public troveCount;
-  mapping(uint256 => Trove) troves;
+  mapping(uint256 => Trove) public troves;
   uint256 private _priceCache;
 
   constructor(
@@ -33,6 +32,9 @@ contract TrovesCRIndex is Ownable, Epoch, IOracle {
       troves[index] = _troves[index];
       index++;
     }
+
+    // todo: need to make this flashloan resistant
+    require(false, "not yet flashloan resistant");
 
     _transferOwnership(_governance);
   }
@@ -59,6 +61,13 @@ contract TrovesCRIndex is Ownable, Epoch, IOracle {
       uint256 tmCollat = trove.manager.getTCR(
         trove.governance.getPriceFeed().fetchPrice()
       );
+
+      // These variables are flashloan manipulatable. An attacker can simply deposit a large
+      // amount of ETH for example and make the TCR go insanely high. This causes the
+      // GMU peg to appreciate by a lot which can cause serious liquidations if not taken
+      // care of properly.
+      //
+      // Ideally this oracle should be placed behind a 30 day daily TWAP.
 
       debt = trove.manager.getEntireSystemDebt();
       collat = collat.add(tmCollat);

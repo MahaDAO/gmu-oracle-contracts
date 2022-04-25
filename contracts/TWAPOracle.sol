@@ -17,7 +17,7 @@ contract TWAPOracle is Epoch, IPriceFeed {
   using SafeMath for uint256;
 
   IPriceFeed public oracle;
-  uint256 public priceCache;
+  uint256 private priceCache;
 
   uint256 public lastPriceIndex;
   mapping(uint256 => uint256) public priceHistory;
