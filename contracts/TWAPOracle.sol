@@ -17,6 +17,8 @@ contract TWAPOracle is Epoch, IPriceFeed {
   using SafeMath for uint256;
 
   IPriceFeed public oracle;
+  uint256 public priceCache;
+
   uint256 public lastPriceIndex;
   mapping(uint256 => uint256) public priceHistory;
   uint256 public precision = 1e9;
@@ -62,12 +64,17 @@ contract TWAPOracle is Epoch, IPriceFeed {
       priceChange < maxPriceChange,
       "TWAPOracle: too much price deviation"
     );
+
+    priceCache = calculatePrice();
   }
 
   function fetchPrice() external view override returns (uint256) {
     // avoids returning a stale price
     require(!_callable(), "TWAPOracle: price is stale");
+    return priceCache;
+  }
 
+  function calculatePrice() public view returns (uint256) {
     // take out the last 3 price points and
     uint256 priceTotal = 0;
     for (uint256 index = lastPriceIndex; index > lastPriceIndex - 3; index--) {
