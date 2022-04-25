@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {KeeperCompatibleInterface} from "./interfaces/KeeperCompatibleInterface.sol";
-import {ITWAPOracle} from "./interfaces/ITWAPOracle.sol";
+import {KeeperCompatibleInterface} from "../interfaces/KeeperCompatibleInterface.sol";
+import {ITWAPOracle} from "../interfaces/ITWAPOracle.sol";
 
 contract ChainlinkTWAPKeeper is Ownable, KeeperCompatibleInterface {
   ITWAPOracle[] public oracles;

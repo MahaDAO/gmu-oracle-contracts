@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import { AggregatorV3Interface } from "./interfaces/AggregatorV3Interface.sol";
-import { IPriceFeed } from "./interfaces/IPriceFeed.sol";
-import { IOracle } from "./interfaces/IOracle.sol";
-import { IUniswapV2Pair } from "./interfaces/IUniswapV2Pair.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {AggregatorV3Interface} from "../interfaces/AggregatorV3Interface.sol";
+import {IPriceFeed} from "../interfaces/IPriceFeed.sol";
+import {IOracle} from "../interfaces/IOracle.sol";
+import {IUniswapV2Pair} from "../interfaces/IUniswapV2Pair.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 interface IERC20WithDeciamls is IERC20 {
   function decimals() external view returns (uint256);

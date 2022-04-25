@@ -3,26 +3,28 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
+import { BigNumber } from "ethers";
 import hre, { ethers } from "hardhat";
 import { wait } from "./utils";
 
 async function main() {
-  const chainlinkOracle = "0xfb82e32bcd4d72f0688f16109193053d52a23e47";
+  const chainlinkOracle = "0xe2e6829cdd6d7d546c13bf3aa346160e62f91a38";
   const period = 86400;
+  const percision = BigNumber.from(10).pow(9).mul(2);
 
-  // We get the contract to deploy
-  const TWAPOracle = await ethers.getContractFactory("TWAPOracle");
-  const instance = await TWAPOracle.deploy(chainlinkOracle, period);
+  // // We get the contract to deploy
+  // const TWAPOracle = await ethers.getContractFactory("TWAPOracle");
+  // const instance = await TWAPOracle.deploy(chainlinkOracle, period, percision);
 
-  await instance.deployed();
+  // await instance.deployed();
 
-  console.log("TWAPOracle deployed to:", instance.address);
+  // console.log("TWAPOracle deployed to:", instance.address);
 
-  await wait(60 * 1000); // wait for a minute
+  // await wait(60 * 1000); // wait for a minute
 
   await hre.run("verify:verify", {
-    address: instance.address,
-    constructorArguments: [chainlinkOracle, period],
+    address: "0x2658140C0981e1d179482226b0e382350C9C8b18",
+    constructorArguments: [chainlinkOracle, period, percision],
   });
 }
 
