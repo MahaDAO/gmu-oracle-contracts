@@ -8,11 +8,11 @@ import hre, { ethers } from "hardhat";
 import { wait } from "./utils";
 
 async function main() {
-  const chainlinkOracle = "0xe2e6829cdd6d7d546c13bf3aa346160e62f91a38";
+  const chainlinkOracle = "0xfb82e32bcd4d72f0688f16109193053d52a23e47";
   const period = 86400;
   const percision = BigNumber.from(10).pow(9).mul(2);
 
-  // // We get the contract to deploy
+  // We get the contract to deploy
   // const TWAPOracle = await ethers.getContractFactory("TWAPOracle");
   // const instance = await TWAPOracle.deploy(chainlinkOracle, period, percision);
 
@@ -23,7 +23,7 @@ async function main() {
   // await wait(60 * 1000); // wait for a minute
 
   await hre.run("verify:verify", {
-    address: "0x2658140C0981e1d179482226b0e382350C9C8b18",
+    address: "0x120da5c69E7B00618AC648Da5ea33ec60aA210ed",
     constructorArguments: [chainlinkOracle, period, percision],
   });
 }
