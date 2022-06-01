@@ -35,7 +35,8 @@ contract AppreciatingOracle is Ownable, IAppreciatingGMUOracle {
 
   AggregatorV3Interface public chainlinkFeed;
 
-  event PriceChange(uint256 timestamp, uint256 nextPrice);
+  event PriceChange(uint256 timestamp, uint256 price, uint256 nextPrice);
+  event ChainklinkFeedChange(uint256 timestamp, uint256 price, uint256 nextPrice);
   event ChainlinkFeedChanged(address indexed old, address indexed curr, uint256 timestamp);
 
   constructor(
@@ -47,7 +48,7 @@ contract AppreciatingOracle is Ownable, IAppreciatingGMUOracle {
     name = _name;
     currPrice = startingPrice;
     chainlinkFeed = _chainlinkFeed;
-    currFeedPrice = _fetchChainlinkPrice();
+    currFeedPrice = _getFeedPrice();
     _transferOwnership(_governance);
   }
 
@@ -69,15 +70,18 @@ contract AppreciatingOracle is Ownable, IAppreciatingGMUOracle {
       uint256 delta = newFeedPrice.sub(currFeedPrice);
       uint256 percentChange = delta.mul(10 ** TARGET_DIGITS).div(currFeedPrice);
 
+      uint256 _oldPrice = currPrice;
       currPrice += currPrice.mul(percentChange).div(10 ** TARGET_DIGITS);  // Appreciate the price by the same %.
+      // solhint-disable-next-line
+      emit PriceChange(block.timestamp, _oldPrice, currPrice);
     }
 
+    uint256 _oldFeedPrice = currFeedPrice;
     currFeedPrice = newFeedPrice; // Update the price from feed(curr. chainlink only) to point to latest market data.
+    // solhint-disable-next-line
+    emit ChainklinkFeedChange(block.timestamp, _oldFeedPrice, currFeedPrice);
 
-    return _scalePriceByDigits(
-      currPrice,
-      TARGET_DIGITS
-    );
+    return currPrice;
   }
 
   function getDecimalPercision() public override pure returns (uint256) {
