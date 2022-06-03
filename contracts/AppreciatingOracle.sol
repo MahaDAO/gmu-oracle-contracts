@@ -36,7 +36,7 @@ contract AppreciatingOracle is Ownable, IAppreciatingGMUOracle {
   AggregatorV3Interface public chainlinkFeed;
 
   event PriceChange(uint256 timestamp, uint256 price, uint256 nextPrice);
-  event ChainklinkFeedChange(uint256 timestamp, uint256 price, uint256 nextPrice);
+  event ChainklinkFeedPriceChange(uint256 timestamp, uint256 price, uint256 nextPrice);
   event ChainlinkFeedChanged(address indexed old, address indexed curr, uint256 timestamp);
 
   constructor(
@@ -79,7 +79,7 @@ contract AppreciatingOracle is Ownable, IAppreciatingGMUOracle {
     uint256 _oldFeedPrice = currFeedPrice;
     currFeedPrice = newFeedPrice; // Update the price from feed(curr. chainlink only) to point to latest market data.
     // solhint-disable-next-line
-    emit ChainklinkFeedChange(block.timestamp, _oldFeedPrice, currFeedPrice);
+    emit ChainklinkFeedPriceChange(block.timestamp, _oldFeedPrice, currFeedPrice);
 
     return currPrice;
   }
