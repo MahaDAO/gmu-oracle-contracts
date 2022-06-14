@@ -71,4 +71,22 @@ describe("Appreciating Oracle", () => {
       );
     });
   });
+
+  describe("Fetch the price when market is up after start but price update is not called", async () => {
+    beforeEach("Set chainlink oracle price to 1.5", async () => {
+      await mockChainlinkAggregator.setPrice(
+        CHAINLINK_PRECISION.mul(25).div(10) // 1.5 times CHAINLINK_PRECISION
+      );
+    });
+
+    it("Should fetch starting GMU price correctly", async () => {
+      expect(await appreciatingOracle.currPrice()).to.eq(GMU_PRECISION);
+    });
+
+    it("Should fetch starting chainlink feed price correctly", async () => {
+      expect(await appreciatingOracle.currFeedPrice()).to.eq(
+        GMU_PRECISION.mul(2)
+      );
+    });
+  });
 });
