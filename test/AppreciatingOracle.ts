@@ -101,7 +101,11 @@ describe("Appreciating Oracle", () => {
 
       await expect(appreciatingOracle.getPrice())
         .to.emit(appreciatingOracle, "ChainklinkFeedPriceChange")
-        .withArgs(GMU_PRECISION.mul(2), GMU_PRECISION.mul(15).div(10));
+        .withArgs(
+          CHAINLINK_STARTING_PRICE.div(100),
+          CHAINLINK_PRECISION.mul(15).div(10).div(100)
+        )
+        .to.not.emit(appreciatingOracle, "PriceChange");
     });
 
     it("Should fetch starting GMU price correctly", async () => {
@@ -111,6 +115,35 @@ describe("Appreciating Oracle", () => {
     it("Should fetch starting chainlink feed price correctly", async () => {
       expect(await appreciatingOracle.currFeedPrice()).to.eq(
         CHAINLINK_PRECISION.mul(15).div(10).div(100)
+      );
+    });
+  });
+
+  describe("Fetch the price when market is up after start but price update is called", async () => {
+    beforeEach("Set chainlink oracle price to 1.5", async () => {
+      await mockChainlinkAggregator.setPrice(
+        CHAINLINK_PRECISION.mul(25).div(10) // 2.5 times CHAINLINK_PRECISION
+      );
+
+      await expect(appreciatingOracle.getPrice())
+        .to.emit(appreciatingOracle, "ChainklinkFeedPriceChange")
+        .withArgs(
+          CHAINLINK_STARTING_PRICE.div(100),
+          CHAINLINK_PRECISION.mul(25).div(10).div(100)
+        )
+        .to.emit(appreciatingOracle, "PriceChange")
+        .withArgs(GMU_STARTING_PRICE, GMU_PRECISION.mul(25).div(10));
+    });
+
+    it("Should fetch starting GMU price correctly", async () => {
+      expect(await appreciatingOracle.currPrice()).to.eq(
+        GMU_PRECISION.mul(25).div(10)
+      );
+    });
+
+    it("Should fetch starting chainlink feed price correctly", async () => {
+      expect(await appreciatingOracle.currFeedPrice()).to.eq(
+        CHAINLINK_PRECISION.mul(25).div(10).div(100)
       );
     });
   });
