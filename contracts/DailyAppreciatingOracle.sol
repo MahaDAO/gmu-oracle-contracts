@@ -48,8 +48,12 @@ contract DailyAppreciatingOracle is IPriceFeed, Epoch {
     uint256 public maxPriceChange;
 
     /**
-     * @dev has the oracle been broken? If there was a major large price change
-     * then the oracle breaks reverting and stopping the protocol.
+     * @dev has the oracle been broken? If there was a large price change
+     * in the target price then the oracle breaks reverting and stopping
+     * the protocol.
+     *
+     * The only way for the protocol to continue operations is to use a new oracle
+     * and disregard this one.
      */
     bool public broken;
 
