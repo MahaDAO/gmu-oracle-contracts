@@ -134,44 +134,63 @@ describe("Appreciating Oracle", () => {
     });
 
     it("Should work correctly", async () => {
-      it("Should fetch starting GMU price correctly when price is up", async () => {
-        expect(await appreciatingOracle.currPrice()).to.eq("2500000");
-      });
-
-      it("Should fetch starting chainlink feed price correctly when price is up", async () => {
-        expect(await appreciatingOracle.currFeedPrice()).to.eq("2500000");
-      });
+      expect(await appreciatingOracle.currPrice()).to.eq("2500000");
+      expect(await appreciatingOracle.currFeedPrice()).to.eq("2500000");
 
       await mockChainlinkAggregator.setPrice("200000000"); // Decrease in price by 0.5 cents from last price.
-
       await expect(appreciatingOracle.getPrice())
         .to.emit(appreciatingOracle, "ChainklinkFeedPriceChange")
         .withArgs("2500000", "2000000")
         .to.not.emit(appreciatingOracle, "PriceChange");
 
-      it("Should fetch starting GMU price correctly when price is down after being up", async () => {
-        expect(await appreciatingOracle.currPrice()).to.eq("2500000"); // This remains the same when last up trend was there.
-      });
-
-      it("Should fetch starting chainlink feed price correctly when price is down after being up", async () => {
-        expect(await appreciatingOracle.currFeedPrice()).to.eq("2000000"); // This changes to latest market trend.
-      });
+      expect(await appreciatingOracle.currPrice()).to.eq("2500000"); // This remains the same when last up trend was there.
+      expect(await appreciatingOracle.currFeedPrice()).to.eq("2000000"); // This changes to latest market trend.
 
       await mockChainlinkAggregator.setPrice("300000000"); // Incrase the price by 1$ from the last price.
-
       await expect(appreciatingOracle.getPrice())
         .to.emit(appreciatingOracle, "ChainklinkFeedPriceChange")
         .withArgs("2000000", "3000000")
         .to.emit(appreciatingOracle, "PriceChange")
         .withArgs("2500000", "3750000");
 
-      it("Should fetch starting GMU price correctly when price is up after being up, down", async () => {
-        expect(await appreciatingOracle.currPrice()).to.eq("2500000");
-      });
+      expect(await appreciatingOracle.currPrice()).to.eq("3750000");
+      expect(await appreciatingOracle.currFeedPrice()).to.eq("3000000");
+    });
+  });
 
-      it("Should fetch starting chainlink feed price correctly when price is up after being up, down", async () => {
-        expect(await appreciatingOracle.currFeedPrice()).to.eq("3750000");
-      });
+  describe("Fetch the price when market is down then up and again up", async () => {
+    beforeEach("Set chainlink oracle price to 1.5", async () => {
+      await mockChainlinkAggregator.setPrice("150000000"); // Increase in price by 0.5 cents from starting price.
+
+      await expect(appreciatingOracle.getPrice())
+        .to.emit(appreciatingOracle, "ChainklinkFeedPriceChange")
+        .withArgs("2000000", "1500000")
+        .to.not.emit(appreciatingOracle, "PriceChange");
+    });
+
+    it("Should work correctly", async () => {
+      expect(await appreciatingOracle.currPrice()).to.eq("2000000");
+      expect(await appreciatingOracle.currFeedPrice()).to.eq("1500000");
+
+      await mockChainlinkAggregator.setPrice("200000000"); // Decrease in price by 0.5 cents from last price.
+      await expect(appreciatingOracle.getPrice())
+        .to.emit(appreciatingOracle, "ChainklinkFeedPriceChange")
+        .withArgs("1500000", "2000000")
+        .to.emit(appreciatingOracle, "PriceChange")
+        .withArgs("2000000", "2666666");
+
+      expect(await appreciatingOracle.currPrice()).to.eq("2666666"); // This increases as there is an increase in price.
+      expect(await appreciatingOracle.currFeedPrice()).to.eq("2000000"); // This changes to latest market trend.
+
+      await mockChainlinkAggregator.setPrice("300000000"); // Incrase the price by 1$ from the last price.
+      await expect(appreciatingOracle.getPrice())
+        .to.emit(appreciatingOracle, "ChainklinkFeedPriceChange")
+        .withArgs("2000000", "3000000")
+        .to.emit(appreciatingOracle, "PriceChange")
+        .withArgs("2666666", "3999999");
+
+      expect(await appreciatingOracle.currPrice()).to.eq("3999999");
+      expect(await appreciatingOracle.currFeedPrice()).to.eq("3000000");
     });
   });
 });
