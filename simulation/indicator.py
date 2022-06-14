@@ -7,6 +7,7 @@ def indicator(price):
   ptn = 0
 
   meanSlope = np.array(price)
+  startingPrice = price[0]
 
   # Ptn will help us attain the memory part of thresholds
   # assuming we start in the middle region
@@ -18,16 +19,16 @@ def indicator(price):
         # it will append the same, when it goes to the bottom if conditions
       elif meanSlope[i] >= upper_T:
         ptn = 1
-      else: slopeOutput.append('start_ambiguity')
+      else: output.append('start_ambiguity')
     if ptn == 1:
       if meanSlope[i] <= lower_T:
         ptn = -1
         # c.append(['downtrend',i])
-      else: slopeOutput.append('uptrend')
+      else: output.append('uptrend')
     if ptn == -1:
       if meanSlope[i] >= upper_T:
         ptn = 1
-        slopeOutput.append('uptrend')
-      else: slopeOutput.append('downtrend')
+        output.append('uptrend')
+      else: output.append('downtrend')
 
   return output
