@@ -100,6 +100,8 @@ contract DailyAppreciatingOracle is IPriceFeed, Epoch {
                 return;
             }
 
+            broken = false;
+
             // Appreciate the price by the same %. Since this is an addition; the price
             // can only go up.
             lastPrice += lastPrice.mul(percentChange).div(10**targetDigits);
