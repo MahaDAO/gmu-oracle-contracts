@@ -198,6 +198,7 @@ describe("Appreciating Oracle", () => {
 
       await advanceTimeAndBlock(86400);
 
+      // Increase the price again.
       await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2460));
       await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2350));
 
@@ -239,6 +240,7 @@ describe("Appreciating Oracle", () => {
 
       await advanceTimeAndBlock(86400);
 
+      // Decrease the price.
       await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2199));
       await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2149));
 
@@ -260,7 +262,7 @@ describe("Appreciating Oracle", () => {
   });
 
   describe("7D & 30D is up for 1 epoch then down and then up again & price update is called", async () => {
-    it("Should fetch price correctly for the both time", async () => {
+    it("Should fetch price correctly for the second up trend is still lower than startPrice", async () => {
       await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2200)); // Increase by 10% from start.
       await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2150)); // Increase by 7.5% from start.
 
@@ -281,6 +283,7 @@ describe("Appreciating Oracle", () => {
 
       await advanceTimeAndBlock(86400);
 
+      // Price goes down for both.
       await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2149));
       await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2100));
 
@@ -301,6 +304,7 @@ describe("Appreciating Oracle", () => {
 
       await advanceTimeAndBlock(86400);
 
+      // Price goes up again but lower than when started.
       await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2180));
       await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2140));
 
@@ -316,6 +320,67 @@ describe("Appreciating Oracle", () => {
       );
       expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
         "2180000000000000000000"
+      );
+    });
+
+    it("Should fetch price correctly for the second up trend is greater than startPrice", async () => {
+      await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2200)); // Increase by 10% from start.
+      await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2150)); // Increase by 7.5% from start.
+
+      await expect(dailyAppreciatingOracle.fetchPrice())
+        .to.emit(dailyAppreciatingOracle, "LastGoodPriceUpdated")
+        .withArgs("2150000000000000000");
+
+      // An increase of 7.5% from lastPrice(start in this case).
+      expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
+        "2150000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice30d()).to.eq(
+        "2150000000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
+        "2200000000000000000000"
+      );
+
+      await advanceTimeAndBlock(86400);
+
+      // Price goes down for both.
+      await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2149));
+      await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2100));
+
+      await expect(dailyAppreciatingOracle.fetchPrice()).to.not.emit(
+        dailyAppreciatingOracle,
+        "LastGoodPriceUpdated"
+      );
+
+      expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
+        "2150000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice30d()).to.eq(
+        "2100000000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
+        "2149000000000000000000"
+      );
+
+      await advanceTimeAndBlock(86400);
+
+      // Price goes up again but lower than when started.
+      await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2210));
+      await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2160));
+
+      await expect(dailyAppreciatingOracle.fetchPrice())
+        .to.emit(dailyAppreciatingOracle, "LastGoodPriceUpdated")
+        .withArgs("2211428571428571427");
+
+      expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
+        "2211428571428571427"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice30d()).to.eq(
+        "2160000000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
+        "2210000000000000000000"
       );
     });
   });
