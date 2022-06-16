@@ -217,6 +217,109 @@ describe("Appreciating Oracle", () => {
     });
   });
 
+  describe("7D & 30D is up for 1 epoch then down & price update is called", async () => {
+    it("Should fetch price correctly for the both time", async () => {
+      await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2200)); // Increase by 10% from start.
+      await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2150)); // Increase by 7.5% from start.
+
+      await expect(dailyAppreciatingOracle.fetchPrice())
+        .to.emit(dailyAppreciatingOracle, "LastGoodPriceUpdated")
+        .withArgs("2150000000000000000");
+
+      // An increase of 7.5% from lastPrice(start in this case).
+      expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
+        "2150000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice30d()).to.eq(
+        "2150000000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
+        "2200000000000000000000"
+      );
+
+      await advanceTimeAndBlock(86400);
+
+      await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2199));
+      await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2149));
+
+      await expect(dailyAppreciatingOracle.fetchPrice()).to.not.emit(
+        dailyAppreciatingOracle,
+        "LastGoodPriceUpdated"
+      );
+
+      expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
+        "2150000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice30d()).to.eq(
+        "2149000000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
+        "2199000000000000000000"
+      );
+    });
+  });
+
+  describe("7D & 30D is up for 1 epoch then down and then up again & price update is called", async () => {
+    it("Should fetch price correctly for the both time", async () => {
+      await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2200)); // Increase by 10% from start.
+      await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2150)); // Increase by 7.5% from start.
+
+      await expect(dailyAppreciatingOracle.fetchPrice())
+        .to.emit(dailyAppreciatingOracle, "LastGoodPriceUpdated")
+        .withArgs("2150000000000000000");
+
+      // An increase of 7.5% from lastPrice(start in this case).
+      expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
+        "2150000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice30d()).to.eq(
+        "2150000000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
+        "2200000000000000000000"
+      );
+
+      await advanceTimeAndBlock(86400);
+
+      await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2149));
+      await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2100));
+
+      await expect(dailyAppreciatingOracle.fetchPrice()).to.not.emit(
+        dailyAppreciatingOracle,
+        "LastGoodPriceUpdated"
+      );
+
+      expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
+        "2150000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice30d()).to.eq(
+        "2100000000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
+        "2149000000000000000000"
+      );
+
+      await advanceTimeAndBlock(86400);
+
+      await mock7DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2180));
+      await mock30DPriceFeed.setPrice(MA_PRICE_FEED_PRECISION.mul(2140));
+
+      await expect(dailyAppreciatingOracle.fetchPrice())
+        .to.emit(dailyAppreciatingOracle, "LastGoodPriceUpdated")
+        .withArgs("2190952380952380951");
+
+      expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
+        "2190952380952380951"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice30d()).to.eq(
+        "2140000000000000000000"
+      );
+      expect(await dailyAppreciatingOracle.lastPrice7d()).to.eq(
+        "2180000000000000000000"
+      );
+    });
+  });
+
   describe("Fetch the price without any updates", async () => {
     it("Should fetch GMU price correctly", async () => {
       expect(await dailyAppreciatingOracle.lastPrice()).to.eq(
