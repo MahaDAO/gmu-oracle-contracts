@@ -25,6 +25,7 @@ contract TWAPOracle is Epoch, IPriceFeed {
 
     uint256 public precision = 10**TARGET_DIGITS;
     uint256 public maxPriceChange;
+    bool public broken = false;
 
     constructor(
         address _oracle,
@@ -64,16 +65,19 @@ contract TWAPOracle is Epoch, IPriceFeed {
             .mul(precision)
             .mul(100)
             .div(maxPrice);
-        require(
-            priceChange < maxPriceChange,
-            "TWAPOracle: too much price deviation"
-        );
+
+        // break the oracle if there is too much price deviation
+        if (priceChange < maxPriceChange) broken = true;
 
         priceCache = calculatePrice();
     }
 
     function fetchPrice() external view override returns (uint256) {
         // avoids returning a stale price
+        require(
+            !broken,
+            "TWAPOracle: oracle is broken. too much price deviation"
+        );
         require(!_callable(), "TWAPOracle: price is stale");
         return priceCache;
     }
