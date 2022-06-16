@@ -79,6 +79,9 @@ contract DailyAppreciatingOracle is IPriceFeed, Epoch {
             priceFeed7D.getDecimalPercision() == targetDigits,
             "bad 7d percision"
         );
+
+        lastPrice7d = priceFeed7D.fetchPrice();
+        lastPrice30d = priceFeed30D.fetchPrice();
     }
 
     function _updatePrice() internal checkEpoch {

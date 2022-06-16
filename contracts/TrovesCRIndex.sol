@@ -51,7 +51,7 @@ contract TrovesCRIndex is Ownable, Epoch, IOracle {
     _priceCache = calculatePrice();
   }
 
-  function calculatePrice() public view returns (uint256) {
+  function calculatePrice() public returns (uint256) {
     uint256 collat;
     uint256 debt;
 
