@@ -16,39 +16,42 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 contract TWAPOracle is Epoch, IPriceFeed {
     using SafeMath for uint256;
 
+    // @dev
     IPriceFeed public oracle;
-    uint256 private priceCache;
 
-    uint256 public lastPriceIndex;
     mapping(uint256 => uint256) public priceHistory;
     uint256 public constant TARGET_DIGITS = 18;
+    uint256 public immutable precision = 10**TARGET_DIGITS;
+    uint256 public immutable maxPriceChange;
+    uint256 public immutable twapDuration;
 
-    uint256 public precision = 10**TARGET_DIGITS;
-    uint256 public maxPriceChange;
+    uint256 public lastPriceIndex;
     bool public broken = false;
+
+    uint256 internal cummulativePrice;
 
     constructor(
         address _oracle,
+        uint256[] memory _priceHistory,
         uint256 _epoch,
+        uint256 _twapDuration,
         uint256 _maxPriceChange
     ) Epoch(_epoch, block.timestamp, 0) {
         oracle = IPriceFeed(_oracle);
 
         maxPriceChange = _maxPriceChange;
+        twapDuration = _twapDuration;
 
-        // prefill the first few epochs
-        uint256 price = oracle.fetchPrice();
-        priceHistory[0] = price;
-        priceHistory[1] = price;
-        priceHistory[2] = price;
-        priceHistory[3] = price;
+        for (uint256 index = 0; index < _twapDuration; index++) {
+            priceHistory[index] = _priceHistory[index];
+            cummulativePrice += _priceHistory[index];
+        }
 
-        lastPriceIndex = 3;
+        lastPriceIndex = _twapDuration;
     }
 
     function updatePrice() public checkEpoch {
         // record the new price point
-        lastPriceIndex += 1;
         priceHistory[lastPriceIndex] = oracle.fetchPrice();
 
         // check the price deviation
@@ -60,40 +63,26 @@ contract TWAPOracle is Epoch, IPriceFeed {
             priceHistory[lastPriceIndex],
             priceHistory[lastPriceIndex - 1]
         );
-        uint256 priceChange = maxPrice
-            .sub(minPrice)
-            .mul(precision)
-            .mul(100)
-            .div(maxPrice);
+
+        // % of change in e18 from 0-1
+        uint256 priceChange18 = maxPrice.sub(minPrice).mul(precision).div(
+            maxPrice
+        );
 
         // break the oracle if there is too much price deviation
-        if (priceChange < maxPriceChange) broken = true;
+        if (priceChange18 > maxPriceChange) broken = true;
 
-        priceCache = calculatePrice();
+        cummulativePrice += priceHistory[lastPriceIndex];
+        cummulativePrice -= priceHistory[lastPriceIndex - twapDuration];
+
+        lastPriceIndex += 1;
     }
 
     function fetchPrice() external view override returns (uint256) {
         // avoids returning a stale price
-        require(
-            !broken,
-            "TWAPOracle: oracle is broken. too much price deviation"
-        );
+        require(!broken, "TWAPOracle: oracle is broken");
         require(!_callable(), "TWAPOracle: price is stale");
-        return priceCache;
-    }
-
-    function calculatePrice() public view returns (uint256) {
-        // take out the last 3 price points and
-        uint256 priceTotal = 0;
-        for (
-            uint256 index = lastPriceIndex;
-            index > lastPriceIndex - 3;
-            index--
-        ) {
-            priceTotal = priceTotal.add(priceHistory[index]);
-        }
-
-        return priceTotal.div(3); // average it out!
+        return cummulativePrice / twapDuration;
     }
 
     function getDecimalPercision() external pure override returns (uint256) {

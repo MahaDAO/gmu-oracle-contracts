@@ -6,30 +6,28 @@ describe("TWAPOracle", async function () {
   const { provider } = ethers;
 
   const one = BigNumber.from(10).pow(18);
-  const precision = BigNumber.from(10).pow(9);
 
   let dummyOracle: Contract;
   let twapOracle: Contract;
-
-  // before("setup accounts & deploy libraries", async () => {
-  //   [deployer, whale, me] = await ethers.getSigners();
-  // });
 
   beforeEach(async function () {
     const MockOracle = await ethers.getContractFactory("MockOracle");
     const TWAPOracle = await ethers.getContractFactory("TWAPOracle");
 
-    dummyOracle = await MockOracle.deploy(one);
+    dummyOracle = await MockOracle.deploy(one.mul(130));
     twapOracle = await TWAPOracle.deploy(
       dummyOracle.address,
+      [100, 110, 120].map((p) => one.mul(p)),
       86400,
-      precision.mul(5)
+      3,
+      one.mul(50).div(100) // max 50% in one day
     );
   });
 
   it("Should deploy properly", async function () {
     expect(await twapOracle.oracle()).to.be.equal(dummyOracle.address);
     expect(await twapOracle.getPeriod()).to.be.equal(86400);
+    // expect(await twapOracle.fetchPrice()).to.be.equal("200000000000000000000");
   });
 
   describe("pass one epoch with no price change", async function () {
@@ -39,19 +37,22 @@ describe("TWAPOracle", async function () {
     });
 
     it("Should report price properly", async function () {
-      expect(await twapOracle.fetchPrice()).to.be.equal(one);
+      expect(await twapOracle.fetchPrice()).to.be.equal(
+        "120000000000000000000"
+      );
     });
   });
 
   describe("fail one epoch with a large price change", async function () {
     beforeEach(async function () {
       await provider.send("evm_increaseTime", [3600]);
-      await dummyOracle.setPrice(one.mul(1000));
+      await dummyOracle.setPrice(one.mul(100000));
     });
 
     it("Should revert", async function () {
-      await expect(twapOracle.updatePrice()).to.be.revertedWith(
-        "too much price deviation"
+      await twapOracle.updatePrice();
+      await expect(twapOracle.fetchPrice()).to.be.revertedWith(
+        "TWAPOracle: oracle is broken"
       );
     });
   });
@@ -61,30 +62,36 @@ describe("TWAPOracle", async function () {
       // expect(await twapOracle.fetchPrice()).to.be.equal("1000000000000000000");
 
       await provider.send("evm_increaseTime", [3600]);
-      await dummyOracle.setPrice(one.mul(101).div(100));
+      await dummyOracle.setPrice(one.mul(150));
       await twapOracle.updatePrice();
     });
 
     it("Should report price properly", async function () {
-      expect(await twapOracle.fetchPrice()).to.be.equal("1003333333333333333");
+      expect(await twapOracle.fetchPrice()).to.be.equal(
+        "126666666666666666666"
+      );
     });
   });
 
   describe("pass two epochs with a small price change", async function () {
     beforeEach(async function () {
       await provider.send("evm_increaseTime", [3600]);
-      await dummyOracle.setPrice(one.mul(101).div(100));
+      await dummyOracle.setPrice(one.mul(150));
       await twapOracle.updatePrice();
 
-      expect(await twapOracle.fetchPrice()).to.be.equal("1003333333333333333");
+      expect(await twapOracle.fetchPrice()).to.be.equal(
+        "126666666666666666666"
+      );
 
       await provider.send("evm_increaseTime", [86400]);
-      await dummyOracle.setPrice(one.mul(102).div(100));
+      await dummyOracle.setPrice(one.mul(160));
       await twapOracle.updatePrice();
     });
 
     it("Should report price properly", async function () {
-      expect(await twapOracle.fetchPrice()).to.be.equal("1010000000000000000");
+      expect(await twapOracle.fetchPrice()).to.be.equal(
+        "143333333333333333333"
+      );
     });
   });
 });
