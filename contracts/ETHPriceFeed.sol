@@ -9,9 +9,6 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {CheckContract} from "./utils/CheckContract.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-// import "./Dependencies/BaseMath.sol";
-// import "./Dependencies/LiquityMath.sol";
-
 /*
  * PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference
  * contract, and a wrapper contract TellorCaller, which connects to TellorMaster contract.

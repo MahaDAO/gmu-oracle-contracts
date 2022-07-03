@@ -28,7 +28,7 @@ contract GMUOracle is IPriceFeed, Epoch {
      * @dev max price the gmu can change by per epoch; if this gets hit then
      * the oracle breaks and the protocol will have to restart using a new oracle.
      */
-    uint256 public maxPriceChange;
+    uint256 public constant MAX_PRICE_CHANGE = 50 * 1e16;
 
     /**
      * @dev has the oracle been broken? If there was a large price change
@@ -40,10 +40,25 @@ contract GMUOracle is IPriceFeed, Epoch {
      */
     bool public broken;
 
+    /**
+     * @dev the trusted oracle providing the ETH/USD pricefeed
+     */
     IPriceFeed public immutable oracle;
-    uint256 public immutable dampeningFactor;
 
+    /**
+     * @dev a dampening factor that dampens the appreciation of ARTH whenever ETH
+     * appreciates. This is ideally set at 10%;
+     */
+    uint256 public constant DAMPENING_FACTOR = 10 * 1e18;
+
+    /**
+     * @dev track the historic prices captured from the oracle
+     */
     mapping(uint256 => uint256) public priceHistory;
+
+    /**
+     * @dev last known index of the priceHistory
+     */
     uint256 public lastPriceIndex;
 
     uint256 internal _cummulativePrice30d;
@@ -57,17 +72,13 @@ contract GMUOracle is IPriceFeed, Epoch {
 
     constructor(
         uint256 _startingPrice18,
-        uint256 _dampeningFactor18,
         address _oracle,
-        uint256[] memory _priceHistory30d,
-        uint256 _maxPriceChange
+        uint256[] memory _priceHistory30d
     ) Epoch(86400, block.timestamp, 0) {
         _startPrice = _startingPrice18;
         _endPrice = _startingPrice18;
         _endPriceTime = block.timestamp;
         _startPriceTime = block.timestamp;
-
-        maxPriceChange = _maxPriceChange;
 
         for (uint256 index = 0; index < 30; index++) {
             priceHistory[index] = _priceHistory30d[index];
@@ -79,7 +90,6 @@ contract GMUOracle is IPriceFeed, Epoch {
         lastPrice7d = _cummulativePrice7d / 7;
 
         oracle = IPriceFeed(_oracle);
-        dampeningFactor = _dampeningFactor18;
     }
 
     function fetchPrice() external override returns (uint256) {
@@ -149,7 +159,7 @@ contract GMUOracle is IPriceFeed, Epoch {
             // % of change in e18 from 0-1
             uint256 priceChange18 = delta.mul(1e18).div(lastPrice30d);
 
-            if (priceChange18 > maxPriceChange) {
+            if (priceChange18 > MAX_PRICE_CHANGE) {
                 // dont change the price and break the oracle
                 broken = true;
                 return;
@@ -158,9 +168,12 @@ contract GMUOracle is IPriceFeed, Epoch {
             // Appreciate the price by the same %. Since this is an addition; the price
             // can only go up.
             uint256 newPrice = _endPrice +
-                _endPrice.mul(priceChange18).div(1e18).mul(dampeningFactor).div(
-                    1e18
-                );
+                _endPrice
+                    .mul(priceChange18)
+                    .div(1e18)
+                    .mul(DAMPENING_FACTOR)
+                    .div(1e18);
+
             _notifyNewPrice(newPrice, 86400);
             emit LastGoodPriceUpdated(newPrice);
         }
