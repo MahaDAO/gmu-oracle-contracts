@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { BigNumber, Contract } from "ethers";
 import { ethers } from "hardhat";
 
-describe.only("LinearAppreciatingOracle", async function () {
+describe("LinearAppreciatingOracle", async function () {
   const { provider } = ethers;
   const one = BigNumber.from(10).pow(18);
 
