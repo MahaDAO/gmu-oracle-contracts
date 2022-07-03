@@ -19,9 +19,6 @@ import {Epoch} from "./utils/Epoch.sol";
 contract GMUOracle is IPriceFeed, Epoch {
     using SafeMath for uint256;
 
-    string public name;
-    uint256 public targetDigits = 18;
-
     /**
      * @dev last captured price from the 7 day oracle
      */
@@ -49,45 +46,42 @@ contract GMUOracle is IPriceFeed, Epoch {
     bool public broken;
 
     IPriceFeed public immutable oracle;
+    uint256 public immutable dampeningFactor;
 
     mapping(uint256 => uint256) public priceHistory;
-    uint256 public constant TARGET_DIGITS = 18;
-    uint256 public immutable precision = 10**TARGET_DIGITS;
     uint256 public lastPriceIndex;
 
-    uint256 internal cummulativePrice30d;
-    uint256 internal cummulativePrice7d;
-
-    uint256 public startPrice;
-    uint256 public dampeningFactor;
-    uint256 public endPrice;
-    uint256 public endPriceTime;
-    uint256 public startPriceTime;
+    uint256 internal _cummulativePrice30d;
+    uint256 internal _cummulativePrice7d;
+    uint256 internal _startPrice;
+    uint256 internal _endPrice;
+    uint256 internal _endPriceTime;
+    uint256 internal _startPriceTime;
     uint256 internal _priceDiff;
     uint256 internal _timeDiff;
 
     constructor(
-        string memory _name,
         uint256 _startingPrice18,
         uint256 _dampeningFactor18,
         address _oracle,
         uint256[] memory _priceHistory30d,
         uint256 _maxPriceChange
     ) Epoch(86400, block.timestamp, 0) {
-        name = _name;
-
-        startPrice = _startingPrice18;
-        endPrice = _startingPrice18;
-        endPriceTime = block.timestamp;
-        startPriceTime = block.timestamp;
+        _startPrice = _startingPrice18;
+        _endPrice = _startingPrice18;
+        _endPriceTime = block.timestamp;
+        _startPriceTime = block.timestamp;
 
         maxPriceChange = _maxPriceChange;
 
         for (uint256 index = 0; index < 30; index++) {
             priceHistory[index] = _priceHistory30d[index];
-            cummulativePrice30d += _priceHistory30d[index];
-            if (index < 7) cummulativePrice7d += _priceHistory30d[index];
+            _cummulativePrice30d += _priceHistory30d[index];
+            if (index < 7) _cummulativePrice7d += _priceHistory30d[index];
         }
+
+        lastPrice30d = _cummulativePrice30d / 30;
+        lastPrice7d = _cummulativePrice7d / 7;
 
         oracle = IPriceFeed(_oracle);
         dampeningFactor = _dampeningFactor18;
@@ -105,44 +99,42 @@ contract GMUOracle is IPriceFeed, Epoch {
         require(!broken, "oracle is broken"); // failsafe check
         if (_callable()) _updatePrice();
 
-        if (startPriceTime >= time) return startPrice;
-        if (endPriceTime <= time) return endPrice;
+        if (_startPriceTime >= time) return _startPrice;
+        if (_endPriceTime <= time) return _endPrice;
 
-        uint256 percentage = (time.sub(startPriceTime)).mul(1e24).div(
+        uint256 percentage = (time.sub(_startPriceTime)).mul(1e24).div(
             _timeDiff
         );
 
-        return startPrice + _priceDiff.mul(percentage).div(1e24);
+        return _startPrice + _priceDiff.mul(percentage).div(1e24);
     }
 
     function _notifyNewPrice(uint256 newPrice, uint256 extraTime) internal {
         require(extraTime > 0, "bad time");
 
-        startPrice = _fetchPriceAt(block.timestamp);
-        require(newPrice > startPrice, "bad price");
+        _startPrice = _fetchPriceAt(block.timestamp);
+        require(newPrice > _startPrice, "bad price");
 
-        endPrice = newPrice;
-        endPriceTime = block.timestamp + extraTime;
-        startPriceTime = block.timestamp;
+        _endPrice = newPrice;
+        _endPriceTime = block.timestamp + extraTime;
+        _startPriceTime = block.timestamp;
 
-        _priceDiff = endPrice.sub(startPrice);
-        _timeDiff = endPriceTime.sub(startPriceTime);
+        _priceDiff = _endPrice.sub(_startPrice);
+        _timeDiff = _endPriceTime.sub(_startPriceTime);
     }
 
     function _updatePrice() internal checkEpoch {
         _updateTWAP();
 
-        uint256 price30d = cummulativePrice30d / 30;
-        uint256 price7d = cummulativePrice7d / 30;
+        uint256 price30d = _cummulativePrice30d / 30;
+        uint256 price7d = _cummulativePrice7d / 7;
 
         // If we are going to change the price, check if both the 30d and 7d price are
         // appreciating
         if (price30d > lastPrice30d && price7d > lastPrice7d) {
             // Calculate for appreciation using the 30d price feed
             uint256 delta = price30d.sub(lastPrice30d);
-            uint256 percentChange = delta.mul(10**targetDigits).div(
-                lastPrice30d
-            );
+            uint256 percentChange = delta.mul(1e18).div(lastPrice30d);
 
             if (percentChange > maxPriceChange) {
                 // dont change the price and break the oracle
@@ -154,12 +146,10 @@ contract GMUOracle is IPriceFeed, Epoch {
 
             // Appreciate the price by the same %. Since this is an addition; the price
             // can only go up.
-            uint256 newPrice = endPrice +
-                endPrice
-                    .mul(percentChange)
-                    .div(precision)
-                    .mul(dampeningFactor)
-                    .div(precision);
+            uint256 newPrice = _endPrice +
+                _endPrice.mul(percentChange).div(1e18).mul(dampeningFactor).div(
+                    1e18
+                );
             _notifyNewPrice(newPrice, 86400);
             emit LastGoodPriceUpdated(newPrice);
         }
@@ -174,8 +164,8 @@ contract GMUOracle is IPriceFeed, Epoch {
         priceHistory[lastPriceIndex] = oracle.fetchPrice();
 
         // update the 30d and 7d TWAPs
-        cummulativePrice30d = _updateSpecificTWAP(cummulativePrice30d, 30);
-        cummulativePrice7d = _updateSpecificTWAP(cummulativePrice7d, 7);
+        _cummulativePrice30d = _updateSpecificTWAP(_cummulativePrice30d, 30);
+        _cummulativePrice7d = _updateSpecificTWAP(_cummulativePrice7d, 7);
 
         lastPriceIndex += 1;
     }
@@ -195,9 +185,7 @@ contract GMUOracle is IPriceFeed, Epoch {
         );
 
         // % of change in e18 from 0-1
-        uint256 priceChange18 = maxPrice.sub(minPrice).mul(precision).div(
-            maxPrice
-        );
+        uint256 priceChange18 = maxPrice.sub(minPrice).mul(1e18).div(maxPrice);
 
         // break the oracle if there is too much price deviation
         if (priceChange18 > maxPriceChange) broken = true;
@@ -208,7 +196,7 @@ contract GMUOracle is IPriceFeed, Epoch {
         return _cummulativePrice;
     }
 
-    function getDecimalPercision() external view override returns (uint256) {
-        return targetDigits;
+    function getDecimalPercision() external pure override returns (uint256) {
+        return 18;
     }
 }
