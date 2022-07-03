@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {AggregatorV3Interface} from "./interfaces/AggregatorV3Interface.sol";
 import {IPriceFeed} from "./interfaces/IPriceFeed.sol";
 import {Epoch} from "./utils/Epoch.sol";
 
@@ -97,7 +95,7 @@ contract GMUOracle is IPriceFeed, Epoch {
 
     function _fetchPriceAt(uint256 time) internal returns (uint256) {
         require(!broken, "oracle is broken"); // failsafe check
-        if (_callable()) _updatePrice();
+        if (_callable()) _updatePrice(); // update oracle if needed
 
         if (_startPriceTime >= time) return _startPrice;
         if (_endPriceTime <= time) return _endPrice;
@@ -134,20 +132,20 @@ contract GMUOracle is IPriceFeed, Epoch {
         if (price30d > lastPrice30d && price7d > lastPrice7d) {
             // Calculate for appreciation using the 30d price feed
             uint256 delta = price30d.sub(lastPrice30d);
-            uint256 percentChange = delta.mul(1e18).div(lastPrice30d);
 
-            if (percentChange > maxPriceChange) {
+            // % of change in e18 from 0-1
+            uint256 priceChange18 = delta.mul(1e18).div(lastPrice30d);
+
+            if (priceChange18 > maxPriceChange) {
                 // dont change the price and break the oracle
                 broken = true;
                 return;
             }
 
-            broken = false;
-
             // Appreciate the price by the same %. Since this is an addition; the price
             // can only go up.
             uint256 newPrice = _endPrice +
-                _endPrice.mul(percentChange).div(1e18).mul(dampeningFactor).div(
+                _endPrice.mul(priceChange18).div(1e18).mul(dampeningFactor).div(
                     1e18
                 );
             _notifyNewPrice(newPrice, 86400);
@@ -172,24 +170,9 @@ contract GMUOracle is IPriceFeed, Epoch {
 
     function _updateSpecificTWAP(uint256 _cummulativePrice, uint256 _duration)
         internal
+        view
         returns (uint256)
     {
-        // check the price deviation
-        uint256 minPrice = Math.min(
-            priceHistory[lastPriceIndex],
-            priceHistory[lastPriceIndex - 1]
-        );
-        uint256 maxPrice = Math.max(
-            priceHistory[lastPriceIndex],
-            priceHistory[lastPriceIndex - 1]
-        );
-
-        // % of change in e18 from 0-1
-        uint256 priceChange18 = maxPrice.sub(minPrice).mul(1e18).div(maxPrice);
-
-        // break the oracle if there is too much price deviation
-        if (priceChange18 > maxPriceChange) broken = true;
-
         _cummulativePrice += priceHistory[lastPriceIndex];
         _cummulativePrice -= priceHistory[lastPriceIndex - _duration];
 
