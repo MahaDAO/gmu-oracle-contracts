@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {AggregatorV3Interface} from "./interfaces/AggregatorV3Interface.sol";
 import {IPriceFeed} from "./interfaces/IPriceFeed.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
