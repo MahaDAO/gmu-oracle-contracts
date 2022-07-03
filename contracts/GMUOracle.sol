@@ -6,11 +6,8 @@ import {IPriceFeed} from "./interfaces/IPriceFeed.sol";
 import {Epoch} from "./utils/Epoch.sol";
 
 /**
- * An always appreciating price feed. Cruicial because the GMU peg needs to always continue to
- * appreciate. This oracle appreciates the price across a certain period of time.
- *
- * Price updates should be recieved from another contract which calculates and
- * understands by how much should the price be updated by.
+ * This is the GMU oracle that algorithmically apprecaites ARTH based on the
+ * growth of the underlying.
  *
  * @author Steven Enamakel enamakel@mahadao.com
  */
@@ -122,8 +119,24 @@ contract GMUOracle is IPriceFeed, Epoch {
     }
 
     function _updatePrice() internal checkEpoch {
-        _updateTWAP();
+        // record the new price point
+        priceHistory[lastPriceIndex] = oracle.fetchPrice();
 
+        // update the 30d TWAP
+        _cummulativePrice30d =
+            _cummulativePrice30d +
+            priceHistory[lastPriceIndex] -
+            priceHistory[lastPriceIndex - 30];
+
+        // update the 7d TWAP
+        _cummulativePrice7d =
+            _cummulativePrice7d +
+            priceHistory[lastPriceIndex] -
+            priceHistory[lastPriceIndex - 7];
+
+        lastPriceIndex += 1;
+
+        // calculate the TWAP prices
         uint256 price30d = _cummulativePrice30d / 30;
         uint256 price7d = _cummulativePrice7d / 7;
 
@@ -152,31 +165,9 @@ contract GMUOracle is IPriceFeed, Epoch {
             emit LastGoodPriceUpdated(newPrice);
         }
 
-        // Update the price from feed(curr. chainlink only) to point to latest market data.
+        // Update the TWAP price trackers
         lastPrice7d = price7d;
         lastPrice30d = price30d;
-    }
-
-    function _updateTWAP() internal {
-        // record the new price point
-        priceHistory[lastPriceIndex] = oracle.fetchPrice();
-
-        // update the 30d and 7d TWAPs
-        _cummulativePrice30d = _updateSpecificTWAP(_cummulativePrice30d, 30);
-        _cummulativePrice7d = _updateSpecificTWAP(_cummulativePrice7d, 7);
-
-        lastPriceIndex += 1;
-    }
-
-    function _updateSpecificTWAP(uint256 _cummulativePrice, uint256 _duration)
-        internal
-        view
-        returns (uint256)
-    {
-        _cummulativePrice += priceHistory[lastPriceIndex];
-        _cummulativePrice -= priceHistory[lastPriceIndex - _duration];
-
-        return _cummulativePrice;
     }
 
     function getDecimalPercision() external pure override returns (uint256) {
