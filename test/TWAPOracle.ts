@@ -16,6 +16,7 @@ describe("TWAPOracle", async function () {
 
     dummyOracle = await MockOracle.deploy(one.mul(130));
     twapOracle = await TWAPOracle.deploy(
+      "Test TWAP Oracle",
       dummyOracle.address,
       [100, 110, 120].map((p) => one.mul(p)),
       86400,

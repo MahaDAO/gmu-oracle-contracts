@@ -16,8 +16,8 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 contract TWAPOracle is Epoch, IPriceFeed {
     using SafeMath for uint256;
 
-    // @dev
-    IPriceFeed public oracle;
+    IPriceFeed public immutable oracle;
+    string public name;
 
     mapping(uint256 => uint256) public priceHistory;
     uint256 public constant TARGET_DIGITS = 18;
@@ -31,6 +31,7 @@ contract TWAPOracle is Epoch, IPriceFeed {
     uint256 internal cummulativePrice;
 
     constructor(
+        string memory _name,
         address _oracle,
         uint256[] memory _priceHistory,
         uint256 _epoch,
@@ -38,6 +39,7 @@ contract TWAPOracle is Epoch, IPriceFeed {
         uint256 _maxPriceChange
     ) Epoch(_epoch, block.timestamp, 0) {
         oracle = IPriceFeed(_oracle);
+        name = _name;
 
         maxPriceChange = _maxPriceChange;
         twapDuration = _twapDuration;
