@@ -3164,6 +3164,11 @@ crypto-browserify@3.12.0:
     randombytes "^2.0.0"
     randomfill "^1.0.3"
 
+csv-reader@^1.0.8:
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/csv-reader/-/csv-reader-1.0.8.tgz#2d1ee452550016aa3b3defea0339a209161eff21"
+  integrity sha512-EK03OmXoet2dljwfJoY7/M6C+DmsthQgObpXfO6yCQ2HKNVSBd9uQ3TDzlfbfDhSn8mgmnPR2oEUftip3VihTw==
+
 d@1, d@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/d/-/d-1.0.1.tgz#8698095372d58dbee346ffd0c7093f99f8f9eb5a"
