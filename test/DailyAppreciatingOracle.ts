@@ -8,7 +8,7 @@ import { advanceTimeAndBlock } from "./utils";
 
 chai.use(solidity);
 
-describe("DailyAppreciatingOracle", () => {
+describe.skip("DailyAppreciatingOracle", () => {
   let operator: SignerWithAddress;
 
   const GMU_PRECISION = BigNumber.from(10).pow(18);

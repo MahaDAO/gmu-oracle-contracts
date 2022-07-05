@@ -3,7 +3,7 @@ import { BigNumber, Contract } from "ethers";
 import { ethers } from "hardhat";
 import { IData, readCSV } from "./utils";
 
-describe.only("GMUOracle", async function () {
+describe("GMUOracle", async function () {
   const { provider } = ethers;
 
   const one = BigNumber.from(10).pow(18);
