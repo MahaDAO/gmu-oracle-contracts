@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IPriceFeed} from "./interfaces/IPriceFeed.sol";
 import {Epoch} from "./utils/Epoch.sol";
+import {console} from "hardhat/console.sol";
 
 /**
  * This is the GMU oracle that algorithmically apprecaites ARTH based on the
@@ -83,9 +84,10 @@ contract GMUOracle is IPriceFeed, Epoch {
         for (uint256 index = 0; index < 30; index++) {
             priceHistory[index] = _priceHistory30d[index];
             _cummulativePrice30d += _priceHistory30d[index];
-            if (index < 7) _cummulativePrice7d += _priceHistory30d[index];
+            if (index >= 23) _cummulativePrice7d += _priceHistory30d[index];
         }
 
+        lastPriceIndex = 30;
         lastPrice30d = _cummulativePrice30d / 30;
         lastPrice7d = _cummulativePrice7d / 7;
 
@@ -93,17 +95,30 @@ contract GMUOracle is IPriceFeed, Epoch {
     }
 
     function fetchPrice() external override returns (uint256) {
+        require(!broken, "oracle is broken"); // failsafe check
+        if (_callable()) _updatePrice(); // update oracle if needed
         return _fetchPriceAt(block.timestamp);
     }
 
     function fetchPriceAt(uint256 time) external returns (uint256) {
+        require(!broken, "oracle is broken"); // failsafe check
+        if (_callable()) _updatePrice(); // update oracle if needed
         return _fetchPriceAt(time);
     }
 
-    function _fetchPriceAt(uint256 time) internal returns (uint256) {
-        require(!broken, "oracle is broken"); // failsafe check
-        if (_callable()) _updatePrice(); // update oracle if needed
+    function fetchLastGoodPrice() external view returns (uint256) {
+        return _fetchPriceAt(block.timestamp);
+    }
 
+    function fetchLastGoodPriceAt(uint256 time)
+        external
+        view
+        returns (uint256)
+    {
+        return _fetchPriceAt(time);
+    }
+
+    function _fetchPriceAt(uint256 time) internal view returns (uint256) {
         if (_startPriceTime >= time) return _startPrice;
         if (_endPriceTime <= time) return _endPrice;
 
@@ -126,6 +141,10 @@ contract GMUOracle is IPriceFeed, Epoch {
 
         _priceDiff = _endPrice.sub(_startPrice);
         _timeDiff = _endPriceTime.sub(_startPriceTime);
+    }
+
+    function updatePrice() external {
+        _updatePrice();
     }
 
     function _updatePrice() internal checkEpoch {
@@ -172,7 +191,7 @@ contract GMUOracle is IPriceFeed, Epoch {
                     .mul(priceChange18)
                     .div(1e18)
                     .mul(DAMPENING_FACTOR)
-                    .div(1e18);
+                    .div(1e20);
 
             _notifyNewPrice(newPrice, 86400);
             emit LastGoodPriceUpdated(newPrice);
