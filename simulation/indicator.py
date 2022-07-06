@@ -1,34 +1,24 @@
-import numpy as np
-
-def indicator(price):
-  output = []
-  lower_T = -450
-  upper_T = 230
-  ptn = 0
-
-  meanSlope = np.array(price)
-  startingPrice = price[0]
+def arth_indicator(pricesLongTerm, pricesShortTerm, startingPrice, longTermDuration = 30, dampeningFactor = 0.1):
+  '''
+  An indicator to algorithimatically calculate ARTH's price
+  '''
+  trend = [startingPrice] * longTermDuration
 
   # Ptn will help us attain the memory part of thresholds
   # assuming we start in the middle region
-  for i in range(len(meanSlope)):
-    if ptn == 0:
-      if meanSlope[i] <= lower_T:
-        ptn = -1
-        # c.append(['downtrend',i])
-        # it will append the same, when it goes to the bottom if conditions
-      elif meanSlope[i] >= upper_T:
-        ptn = 1
-      else: output.append('start_ambiguity')
-    if ptn == 1:
-      if meanSlope[i] <= lower_T:
-        ptn = -1
-        # c.append(['downtrend',i])
-      else: output.append('uptrend')
-    if ptn == -1:
-      if meanSlope[i] >= upper_T:
-        ptn = 1
-        output.append('uptrend')
-      else: output.append('downtrend')
+  for i in range(longTermDuration, len(pricesLongTerm)):
+    # If we are going to change the price, check if both the 30d and 7d price are
+    # appreciating
+    if (pricesLongTerm[i] > pricesLongTerm[i - 1] and pricesShortTerm[i] > pricesShortTerm[i - 1]):
+      delta = pricesLongTerm[i] - pricesLongTerm[i - 1]
+      percentageChange = delta / pricesLongTerm[i - 1]
 
-  return output
+      # dampen the change; say we will only appreciate ARTH by 10% of the bitcoin appreciation
+      dampnedChange = percentageChange * dampeningFactor
+      trend.append(trend[i -1] * (1 + dampnedChange))
+
+    # don't change the price
+    else:
+      trend.append(trend[i - 1])
+
+  return trend
