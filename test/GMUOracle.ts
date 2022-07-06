@@ -107,54 +107,90 @@ describe("GMUOracle", async function () {
     });
   });
 
+  describe.skip("pass through all the epochs in the simulation", async function () {
+    beforeEach(async function () {
+      for (let index = 0; index < data.length - 31; index++) {
+        await dummyOracle.setPrice(to18BN(data[index + 31].price));
+        await gmuOracle.updatePrice();
+        await provider.send("evm_increaseTime", [86400]);
+      }
+    });
+
+    it("Should change the price", async function () {
+      expectRoughly(await gmuOracle.fetchLastGoodPrice(), 3);
+    });
+
+    it("Should update 30d TWAP properly", async function () {
+      const priceBefore = await gmuOracle.lastPrice30d();
+      await gmuOracle.updatePrice();
+      expectRoughly(await gmuOracle.lastPrice30d(), 1270.1);
+      expect(await gmuOracle.lastPrice30d()).to.not.be.equal(priceBefore);
+    });
+
+    it("Should update 7d TWAP properly", async function () {
+      const priceBefore = await gmuOracle.lastPrice7d();
+      await gmuOracle.updatePrice();
+      expectRoughly(await gmuOracle.lastPrice7d(), 1075);
+      expect(await gmuOracle.lastPrice7d()).to.not.be.equal(priceBefore);
+    });
+  });
+
   describe.skip("test the price scaling features", async function () {
     // todo
   });
 
-  describe.skip("test the algorithimic calculations", async function () {
+  describe("test the failsafe", async function () {
     // todo
-  });
-
-  describe.skip("test the failsafe", async function () {
-    // todo
-    describe("fail one epoch with a large price change", async function () {
+    describe.only("fail one epoch with a large price increase", async function () {
       beforeEach(async function () {
-        await provider.send("evm_increaseTime", [3600]);
+        await provider.send("evm_increaseTime", [86400]);
         await dummyOracle.setPrice(one.mul(100000));
       });
 
       it("Should revert", async function () {
         await gmuOracle.updatePrice();
         await expect(gmuOracle.fetchPrice()).to.be.revertedWith(
-          "GMUOracle: oracle is broken"
+          "oracle is broken"
+        );
+      });
+    });
+
+    describe.only("fail one epoch with a large price decrease", async function () {
+      beforeEach(async function () {
+        await provider.send("evm_increaseTime", [86400]);
+        await dummyOracle.setPrice(1);
+      });
+
+      it("Should revert", async function () {
+        await gmuOracle.updatePrice();
+        await expect(gmuOracle.fetchPrice()).to.be.revertedWith(
+          "oracle is broken"
         );
       });
     });
 
     describe("pass one epoch with a small price change", async function () {
       beforeEach(async function () {
-        // expect(await GMUOracle.fetchPrice()).to.be.equal("1000000000000000000");
-
-        await provider.send("evm_increaseTime", [3600]);
+        await provider.send("evm_increaseTime", [86400]);
         await dummyOracle.setPrice(one.mul(150));
         await gmuOracle.updatePrice();
       });
 
       it("Should report price properly", async function () {
-        expect(await gmuOracle.fetchPrice()).to.be.equal(
-          "126666666666666666666"
+        expect(await gmuOracle.fetchLastGoodPrice()).to.be.equal(
+          "2000000000000000000"
         );
       });
     });
 
     describe("pass two epochs with a small price change", async function () {
       beforeEach(async function () {
-        await provider.send("evm_increaseTime", [3600]);
+        await provider.send("evm_increaseTime", [86400]);
         await dummyOracle.setPrice(one.mul(150));
         await gmuOracle.updatePrice();
 
-        expect(await gmuOracle.fetchPrice()).to.be.equal(
-          "126666666666666666666"
+        expect(await gmuOracle.fetchLastGoodPrice()).to.be.equal(
+          "2000000000000000000"
         );
 
         await provider.send("evm_increaseTime", [86400]);
@@ -163,8 +199,8 @@ describe("GMUOracle", async function () {
       });
 
       it("Should report price properly", async function () {
-        expect(await gmuOracle.fetchPrice()).to.be.equal(
-          "143333333333333333333"
+        expect(await gmuOracle.fetchLastGoodPrice()).to.be.equal(
+          "2000000000000000000"
         );
       });
     });
