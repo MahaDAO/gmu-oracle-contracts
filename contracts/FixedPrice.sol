@@ -5,32 +5,36 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 
 contract FixedPrice is Ownable, IOracle {
-  uint256 public price = 1e6;
-  string public name;
+    uint256 public price = 1e18;
+    string public name;
 
-  event PriceChange(uint256 timestamp, uint256 price);
+    event PriceChange(uint256 timestamp, uint256 price);
 
-  constructor(
-    string memory _name,
-    uint256 startingPrice,
-    address _governance
-  ) {
-    name = _name;
-    price = startingPrice;
-    _transferOwnership(_governance);
-  }
+    constructor(
+        string memory _name,
+        uint256 startingPrice,
+        address _governance
+    ) {
+        name = _name;
+        price = startingPrice;
+        _transferOwnership(_governance);
+    }
 
-  function getPrice() public view override returns (uint256) {
-    return price;
-  }
+    function getPrice() public view override returns (uint256) {
+        return price;
+    }
 
-  function getDecimalPercision() public pure override returns (uint256) {
-    return 6;
-  }
+    function fetchPrice() public view returns (uint256) {
+        return price;
+    }
 
-  function setPrice(uint256 _price) public onlyOwner {
-    require(_price >= 0, "Oracle: price cannot be < 0");
-    price = _price;
-    emit PriceChange(block.timestamp, _price);
-  }
+    function getDecimalPercision() public pure override returns (uint256) {
+        return 18;
+    }
+
+    function setPrice(uint256 _price) public onlyOwner {
+        require(_price >= 0, "Oracle: price cannot be < 0");
+        price = _price;
+        emit PriceChange(block.timestamp, _price);
+    }
 }
