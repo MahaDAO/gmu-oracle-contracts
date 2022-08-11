@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {IPriceFeed} from "./interfaces/IPriceFeed.sol";
+import {IGMUOracle, IPriceFeed} from "./interfaces/IGMUOracle.sol";
 import {Epoch} from "./utils/Epoch.sol";
 import {console} from "hardhat/console.sol";
 
@@ -12,7 +12,7 @@ import {console} from "hardhat/console.sol";
  *
  * @author Steven Enamakel enamakel@mahadao.com
  */
-contract GMUOracle is IPriceFeed, Epoch {
+contract GMUOracle is IGMUOracle, Epoch {
     using SafeMath for uint256;
 
     /**
@@ -143,7 +143,7 @@ contract GMUOracle is IPriceFeed, Epoch {
         _timeDiff = _endPriceTime.sub(_startPriceTime);
     }
 
-    function updatePrice() external {
+    function updatePrice() external override {
         _updatePrice();
     }
 
