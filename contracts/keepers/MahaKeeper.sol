@@ -29,6 +29,10 @@ contract MahaKeeper is Ownable, KeeperCompatibleInterface {
         mahaRewardPerEpoch = reward;
     }
 
+    function nextUpkeepAt() external view returns (uint256) {
+        return gmuOracle.nextEpochPoint();
+    }
+
     function checkUpkeep(bytes calldata _checkData)
         external
         view
