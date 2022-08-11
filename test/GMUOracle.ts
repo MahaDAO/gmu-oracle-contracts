@@ -141,7 +141,7 @@ describe("GMUOracle", async function () {
 
   describe("test the failsafe", async function () {
     // todo
-    describe.only("fail one epoch with a large price increase", async function () {
+    describe("fail one epoch with a large price increase", async function () {
       beforeEach(async function () {
         await provider.send("evm_increaseTime", [86400]);
         await dummyOracle.setPrice(one.mul(100000));
@@ -155,7 +155,7 @@ describe("GMUOracle", async function () {
       });
     });
 
-    describe.only("fail one epoch with a large price decrease", async function () {
+    describe.skip("fail one epoch with a large price decrease", async function () {
       beforeEach(async function () {
         await provider.send("evm_increaseTime", [86400]);
         await dummyOracle.setPrice(1);
