@@ -29,10 +29,11 @@ contract MahaKeeper is Ownable, KeeperCompatibleInterface {
         mahaRewardPerEpoch = reward;
     }
 
-    function nextUpkeepAt() external view returns (uint256) {
+    function nextUpkeepTime() external view returns (uint256) {
         return gmuOracle.nextEpochPoint();
     }
 
+    /* solhint-disable-next-line no-unsused-vars */
     function checkUpkeep(bytes calldata _checkData)
         external
         view
@@ -51,4 +52,5 @@ contract MahaKeeper is Ownable, KeeperCompatibleInterface {
         gmuOracle.updatePrice();
         maha.transfer(msg.sender, mahaRewardPerEpoch);
     }
+    /* solhint-enable no-unsused-vars */
 }
