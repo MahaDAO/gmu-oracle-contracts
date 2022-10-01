@@ -22,7 +22,7 @@ contract ETHGMUOracle is IPriceFeed {
 
     function fetchPrice() external override returns (uint256) {
         uint256 gmuPrice = _fetchGMUPrice();
-        uint256 ethPrice = _fetchETHPrice();
+        uint256 ethPrice = ethPriceFeed.fetchPrice();
         lastGoodPrice = (ethPrice.mul(10**TARGET_DIGITS).div(gmuPrice));
         emit LastGoodPriceUpdated(lastGoodPrice);
         return lastGoodPrice;
@@ -48,12 +48,6 @@ contract ETHGMUOracle is IPriceFeed {
     function _fetchGMUPrice() internal returns (uint256) {
         uint256 price = gmuOracle.fetchPrice();
         uint256 precision = gmuOracle.getDecimalPercision();
-        return _scalePriceByDigits(price, precision);
-    }
-
-    function _fetchETHPrice() internal returns (uint256) {
-        uint256 price = ethPriceFeed.fetchPrice();
-        uint256 precision = ethPriceFeed.getDecimalPercision();
         return _scalePriceByDigits(price, precision);
     }
 
