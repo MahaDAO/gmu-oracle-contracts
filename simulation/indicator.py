@@ -1,6 +1,6 @@
 def arth_indicator(pricesLongTerm, pricesShortTerm, startingPrice, longTermDuration = 30, dampeningFactor = 0.1):
   '''
-  An indicator to algorithimatically calculate ARTH's price
+  An indicator to algorithmically calculate ARTH's price
   '''
   trend = [startingPrice] * longTermDuration
 
