@@ -106,7 +106,7 @@ contract GMUOracle is IGMUOracle, Epoch {
         return _fetchPriceAt(time);
     }
 
-    function fetchLastGoodPrice() external view returns (uint256) {
+    function fetchLastGoodPrice() external view override returns (uint256) {
         return _fetchPriceAt(block.timestamp);
     }
 
