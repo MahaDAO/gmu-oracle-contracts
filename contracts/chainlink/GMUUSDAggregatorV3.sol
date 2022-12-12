@@ -15,6 +15,16 @@ interface AggregatorV3Interface {
 
     function version() external view returns (uint256);
 
+    function latestAnswer() external view returns (int256);
+
+    function latestTimestamp() external view returns (uint256);
+
+    function latestRound() external view returns (uint256);
+
+    function getAnswer(uint256 roundId) external view returns (int256);
+
+    function getTimestamp(uint256 roundId) external view returns (uint256);
+
     // getRoundData and latestRoundData should both raise "No data present"
     // if they do not have data to report, instead of returning unset values
     // which could be misinterpreted as actual reported values.
@@ -52,8 +62,8 @@ contract GMUUSDAggregatorV3 is AggregatorV3Interface {
         gmuFeed = _gmuFeed;
     }
 
-    function decimals() external view override returns (uint8) {
-        return uint8(gmuFeed.getDecimalPercision());
+    function decimals() external pure override returns (uint8) {
+        return 8;
     }
 
     function description() external pure override returns (string memory) {
@@ -79,7 +89,7 @@ contract GMUUSDAggregatorV3 is AggregatorV3Interface {
     {
         return (
             _roundId,
-            int256(gmuFeed.fetchLastGoodPrice()),
+            int256(gmuFeed.fetchLastGoodPrice() / 1e10),
             0,
             block.timestamp,
             _roundId
@@ -98,6 +108,34 @@ contract GMUUSDAggregatorV3 is AggregatorV3Interface {
             uint80 answeredInRound
         )
     {
-        return (1, int256(gmuFeed.fetchLastGoodPrice()), 0, block.timestamp, 1);
+        return (
+            1,
+            int256(gmuFeed.fetchLastGoodPrice() / 1e10),
+            0,
+            block.timestamp,
+            1
+        );
+    }
+
+    function latestAnswer() external view override returns (int256) {
+        return int256(gmuFeed.fetchLastGoodPrice()) / 1e10;
+    }
+
+    function latestTimestamp() external view override returns (uint256) {
+        return block.timestamp;
+    }
+
+    function latestRound() external view override returns (uint256) {
+        return block.timestamp;
+    }
+
+    function getAnswer(uint256) external pure override returns (int256) {
+        require(false, "not implemented");
+        return 0;
+    }
+
+    function getTimestamp(uint256) external pure override returns (uint256) {
+        require(false, "not implemented");
+        return 0;
     }
 }
