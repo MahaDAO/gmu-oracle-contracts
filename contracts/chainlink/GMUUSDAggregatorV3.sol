@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {IPriceFeed} from "../interfaces/IPriceFeed.sol";
+import {IGMUOracle} from "../interfaces/IGMUOracle.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
 import {IUniswapV2Pair} from "../interfaces/IUniswapV2Pair.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -46,9 +46,9 @@ interface AggregatorV3Interface {
  */
 contract GMUUSDAggregatorV3 is AggregatorV3Interface {
     using SafeMath for uint256;
-    IPriceFeed public gmuFeed;
+    IGMUOracle public gmuFeed;
 
-    constructor(IPriceFeed _gmuFeed) {
+    constructor(IGMUOracle _gmuFeed) {
         gmuFeed = _gmuFeed;
     }
 
@@ -67,6 +67,7 @@ contract GMUUSDAggregatorV3 is AggregatorV3Interface {
 
     function getRoundData(uint80 _roundId)
         external
+        view
         override
         returns (
             uint80 roundId,
@@ -78,7 +79,7 @@ contract GMUUSDAggregatorV3 is AggregatorV3Interface {
     {
         return (
             _roundId,
-            int256(gmuFeed.fetchPrice()),
+            int256(gmuFeed.fetchLastGoodPrice()),
             0,
             block.timestamp,
             _roundId
@@ -87,6 +88,7 @@ contract GMUUSDAggregatorV3 is AggregatorV3Interface {
 
     function latestRoundData()
         external
+        view
         override
         returns (
             uint80 roundId,
@@ -96,6 +98,6 @@ contract GMUUSDAggregatorV3 is AggregatorV3Interface {
             uint80 answeredInRound
         )
     {
-        return (1, int256(gmuFeed.fetchPrice()), 0, block.timestamp, 1);
+        return (1, int256(gmuFeed.fetchLastGoodPrice()), 0, block.timestamp, 1);
     }
 }

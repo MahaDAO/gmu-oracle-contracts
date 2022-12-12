@@ -6,4 +6,6 @@ import {IEpoch} from "./IEpoch.sol";
 
 interface IGMUOracle is IPriceFeed, IEpoch {
     function updatePrice() external;
+
+    function fetchLastGoodPrice() external view returns (uint256);
 }
