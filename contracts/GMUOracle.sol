@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IGMUOracle, IPriceFeed} from "./interfaces/IGMUOracle.sol";
 import {Epoch} from "./utils/Epoch.sol";
+import {KeeperCompatibleInterface} from "./interfaces/KeeperCompatibleInterface.sol";
 
 /**
  * This is the GMU oracle that algorithmically apprecaites ARTH based on the
@@ -11,7 +12,7 @@ import {Epoch} from "./utils/Epoch.sol";
  *
  * @author Steven Enamakel enamakel@mahadao.com
  */
-contract GMUOracle is IGMUOracle, Epoch {
+contract GMUOracle is IGMUOracle, Epoch, KeeperCompatibleInterface {
     using SafeMath for uint256;
 
     /**
@@ -213,5 +214,19 @@ contract GMUOracle is IGMUOracle, Epoch {
 
     function getDecimalPercision() external pure override returns (uint256) {
         return 18;
+    }
+
+    function checkUpkeep(bytes calldata)
+        external
+        view
+        override
+        returns (bool upkeepNeeded, bytes memory)
+    {
+        if (_callable()) return (true, "");
+        return (false, "");
+    }
+
+    function performUpkeep(bytes calldata) external override {
+        _updatePrice();
     }
 }
