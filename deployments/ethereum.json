@@ -1,0 +1,17 @@
+{
+  "GMUOracle": {
+    "abi": "GMUOracle",
+    "verified": true,
+    "address": "0x066A917fA2e1739ccfc306dc73ff78EECa8B6F29"
+  },
+  "ETHGMUOracle": {
+    "abi": "ETHGMUOracle",
+    "verified": true,
+    "address": "0xc31aDC9ae073a1F6A9Ce5C41B32c18790ea667fe"
+  },
+  "GMUUSDAggregatorV3": {
+    "abi": "GMUUSDAggregatorV3",
+    "verified": true,
+    "address": "0x4D9f5C2cB7aBf1a044e6a34167ad4288546F0639"
+  }
+}
