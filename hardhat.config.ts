@@ -13,7 +13,6 @@ dotenv.config();
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
-
   for (const account of accounts) {
     console.log(account.address);
   }
@@ -25,8 +24,24 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`,
+    hardhat: {
+      forking: {
+        url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+        // blockNumber: 16334756,
+      },
+      accounts: [
+        {
+          balance: "100000000000000000000",
+          privateKey:
+            process.env.PRIVATE_KEY !== undefined
+              ? process.env.PRIVATE_KEY
+              : "",
+        },
+      ],
+    },
+    ethereum: {
+      url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      // `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },

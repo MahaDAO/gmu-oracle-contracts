@@ -62,8 +62,9 @@ contract GMUOracle is IGMUOracle, Epoch, KeeperCompatibleInterface {
      */
     uint256 public lastPriceIndex;
 
-    uint256 internal _cummulativePrice30d;
-    uint256 internal _cummulativePrice7d;
+    uint256 public cummulativePrice30d;
+    uint256 public cummulativePrice7d;
+
     uint256 internal _startPrice;
     uint256 internal _endPrice;
     uint256 internal _endPriceTime;
@@ -83,13 +84,13 @@ contract GMUOracle is IGMUOracle, Epoch, KeeperCompatibleInterface {
 
         for (uint256 index = 0; index < 30; index++) {
             priceHistory[index] = _priceHistory30d[index];
-            _cummulativePrice30d += _priceHistory30d[index];
-            if (index >= 23) _cummulativePrice7d += _priceHistory30d[index];
+            cummulativePrice30d += _priceHistory30d[index];
+            if (index >= 23) cummulativePrice7d += _priceHistory30d[index];
         }
 
         lastPriceIndex = 30;
-        lastPrice30d = _cummulativePrice30d / 30;
-        lastPrice7d = _cummulativePrice7d / 7;
+        lastPrice30d = cummulativePrice30d / 30;
+        lastPrice7d = cummulativePrice7d / 7;
 
         oracle = IPriceFeed(_oracle);
 
@@ -154,22 +155,22 @@ contract GMUOracle is IGMUOracle, Epoch, KeeperCompatibleInterface {
         priceHistory[lastPriceIndex] = oracle.fetchPrice();
 
         // update the 30d TWAP
-        _cummulativePrice30d =
-            _cummulativePrice30d +
+        cummulativePrice30d =
+            cummulativePrice30d +
             priceHistory[lastPriceIndex] -
             priceHistory[lastPriceIndex - 30];
 
         // update the 7d TWAP
-        _cummulativePrice7d =
-            _cummulativePrice7d +
+        cummulativePrice7d =
+            cummulativePrice7d +
             priceHistory[lastPriceIndex] -
             priceHistory[lastPriceIndex - 7];
 
         lastPriceIndex += 1;
 
         // calculate the TWAP prices
-        uint256 price30d = _cummulativePrice30d / 30;
-        uint256 price7d = _cummulativePrice7d / 7;
+        uint256 price30d = cummulativePrice30d / 30;
+        uint256 price7d = cummulativePrice7d / 7;
 
         // If we are going to change the price, check if both the 30d and 7d price are
         // appreciating
@@ -220,7 +221,7 @@ contract GMUOracle is IGMUOracle, Epoch, KeeperCompatibleInterface {
         external
         view
         override
-        returns (bool upkeepNeeded, bytes memory)
+        returns (bool, bytes memory)
     {
         if (_callable()) return (true, "");
         return (false, "");

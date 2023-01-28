@@ -3,20 +3,20 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import hre, { ethers } from "hardhat";
-import { deployOrLoadAndVerify, getOutputAddress, wait } from "./utils";
+import { ethers } from "hardhat";
 
 async function main() {
-  const gmuOracle = await getOutputAddress("GMUOracle", "ethereum");
-
-  const instance = await deployOrLoadAndVerify(
-    "GMUUSDAggregatorV3",
-    "GMUUSDAggregatorV3",
-    [gmuOracle]
+  // We get the contract to deploy
+  const oracle = await ethers.getContractAt(
+    "GMUOracle",
+    "0x7EE5010Cbd5e499b7d66a7cbA2Ec3BdE5fca8e00"
   );
 
-  console.log("GMUUSDAggregatorV3 deployed to:", instance.address);
-  console.log("getRoundData", await instance.getRoundData(1));
+  const max = (await oracle.lastPriceIndex()).toNumber();
+  for (let index = max - 40; index < max; index++) {
+    const p = await oracle.priceHistory(index);
+    console.log(index, p.toString());
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere
