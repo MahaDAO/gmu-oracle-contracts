@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IGMUOracle, IPriceFeed} from "./interfaces/IGMUOracle.sol";
 import {Epoch} from "./utils/Epoch.sol";
-import {console} from "hardhat/console.sol";
 
 /**
  * This is the GMU oracle that algorithmically apprecaites ARTH based on the
@@ -92,6 +91,8 @@ contract GMUOracle is IGMUOracle, Epoch {
         lastPrice7d = _cummulativePrice7d / 7;
 
         oracle = IPriceFeed(_oracle);
+
+        renounceOwnership();
     }
 
     function fetchPrice() external override returns (uint256) {
@@ -200,6 +201,14 @@ contract GMUOracle is IGMUOracle, Epoch {
         // Update the TWAP price trackers
         lastPrice7d = price7d;
         lastPrice30d = price30d;
+
+        emit PricesUpdated(
+            msg.sender,
+            price30d,
+            price7d,
+            lastPriceIndex,
+            _endPrice
+        );
     }
 
     function getDecimalPercision() external pure override returns (uint256) {

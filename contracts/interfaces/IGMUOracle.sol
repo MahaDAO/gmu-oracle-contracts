@@ -8,4 +8,12 @@ interface IGMUOracle is IPriceFeed, IEpoch {
     function updatePrice() external;
 
     function fetchLastGoodPrice() external view returns (uint256);
+
+    event PricesUpdated(
+        address indexed who,
+        uint256 price30d,
+        uint256 price7d,
+        uint256 priceIndex,
+        uint256 lastPrice
+    );
 }
