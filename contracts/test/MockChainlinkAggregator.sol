@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/AggregatorV3Interface.sol";
 
-contract MockChainlinkAggregator is AggregatorV3Interface {
+abstract contract MockChainlinkAggregator is AggregatorV3Interface {
     // storage variables to hold the mock data
     uint8 private decimalsVal = 8;
-    int256 private price = int256(10 ** decimalsVal);
-    int256 private prevPrice = int256(10 ** decimalsVal);
+    int256 private price = int256(10**decimalsVal);
+    int256 private prevPrice = int256(10**decimalsVal);
     uint256 private updateTime = block.timestamp;
     uint256 private prevUpdateTime = block.timestamp;
 
