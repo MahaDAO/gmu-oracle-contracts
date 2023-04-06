@@ -211,7 +211,7 @@ contract ChainlinkLPOracle is AggregatorV3Interface {
     }
 
     function getAnswer(uint256) external view override returns (int256) {
-        return int256(_fetchPrice()) / 1e10;
+        return int256(_fetchPrice());
     }
 
     function getTimestamp(uint256) external view override returns (uint256) {

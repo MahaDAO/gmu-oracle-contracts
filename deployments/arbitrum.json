@@ -3,5 +3,15 @@
     "abi": "ChainlinkLPOracle",
     "verified": true,
     "address": "0xEDe13A2f72eaDd2262818c535d456c1D63CCe90B"
+  },
+  "ChainlinkFixedPriceOracle-Impl": {
+    "abi": "ChainlinkFixedPriceOracle",
+    "verified": true,
+    "address": "0x48afCdf93711707A05106B17e24DC830f248Ca89"
+  },
+  "ChainlinkFixedPriceOracle": {
+    "abi": "TransparentUpgradeableProxy",
+    "verified": true,
+    "address": "0xF6D51cf808A7A848ea825D41DD2651C4AF236fe1"
   }
 }

@@ -10,11 +10,11 @@ contract FixedPrice is Ownable, IOracle {
 
     event PriceChange(uint256 timestamp, uint256 price);
 
-    constructor(
+    function _initialize(
         string memory _name,
         uint256 startingPrice,
         address _governance
-    ) {
+    ) internal {
         name = _name;
         price = startingPrice;
         _transferOwnership(_governance);
