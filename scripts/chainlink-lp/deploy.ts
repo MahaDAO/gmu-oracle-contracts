@@ -11,8 +11,8 @@ async function main() {
   const lpToken = "0x79bf7147ebcd0d55e83cb42ed3ba1bb2bb23ef20";
 
   // We get the contract to deploy
-  const instance = await deployOrLoadAndVerify(
-    "SLP-USDTUDSCT-ChainlinkLPOracle",
+  await deployOrLoadAndVerify(
+    "SLP-USDTUSDC-ChainlinkLPOracle",
     "ChainlinkLPOracle",
     [tokenUSDTOracle, tokenUSDCOracle, lpToken]
   );

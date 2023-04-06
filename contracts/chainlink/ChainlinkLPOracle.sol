@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {AggregatorV3Interface} from "../interfaces/AggregatorV3Interface.sol";
-import {IPriceFeed} from "../interfaces/IPriceFeed.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
 import {ISushiSwapV2Pair} from "../interfaces/ISushiSwapV2Pair.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,7 +12,7 @@ interface IERC20WithDeciamls is IERC20 {
     function decimals() external view returns (uint256);
 }
 
-contract ChainlinkLPOracle is IPriceFeed {
+contract ChainlinkLPOracle is AggregatorV3Interface {
     using SafeMath for uint256;
 
     ISushiSwapV2Pair public lp;
@@ -46,7 +45,7 @@ contract ChainlinkLPOracle is IPriceFeed {
         return amount.mul(_fetchPrice()).div(1e18);
     }
 
-    function fetchPrice() external view override returns (uint256) {
+    function fetchPrice() external view returns (uint256) {
         return _fetchPrice();
     }
 
@@ -127,9 +126,9 @@ contract ChainlinkLPOracle is IPriceFeed {
         AggregatorV3Interface agg
     ) internal view returns (ChainlinkResponse memory chainlinkResponse) {
         // First, try to get current decimal precision:
-        try agg.decimals() returns (uint8 decimals) {
+        try agg.decimals() returns (uint8 _decimals) {
             // If call to Chainlink succeeds, record the current decimal precision
-            chainlinkResponse.decimals = decimals;
+            chainlinkResponse.decimals = _decimals;
         } catch {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return chainlinkResponse;
@@ -155,7 +154,67 @@ contract ChainlinkLPOracle is IPriceFeed {
         }
     }
 
-    function getDecimalPercision() external pure override returns (uint256) {
-        return TARGET_DIGITS;
+    function decimals() external pure override returns (uint8) {
+        return uint8(TARGET_DIGITS);
+    }
+
+    function description() external pure override returns (string memory) {
+        return "A chainlink v3 aggregator for Uniswap v2 LP tokens.";
+    }
+
+    function version() external pure override returns (uint256) {
+        return 1;
+    }
+
+    function getRoundData(
+        uint80 _roundId
+    )
+        external
+        view
+        override
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        )
+    {
+        return (_roundId, int256(_fetchPrice()), 0, block.timestamp, _roundId);
+    }
+
+    function latestRoundData()
+        external
+        view
+        override
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        )
+    {
+        return (1, int256(_fetchPrice()), 0, block.timestamp, 1);
+    }
+
+    function latestAnswer() external view override returns (int256) {
+        return int256(_fetchPrice());
+    }
+
+    function latestTimestamp() external view override returns (uint256) {
+        return block.timestamp;
+    }
+
+    function latestRound() external view override returns (uint256) {
+        return block.timestamp;
+    }
+
+    function getAnswer(uint256) external view override returns (int256) {
+        return int256(_fetchPrice()) / 1e10;
+    }
+
+    function getTimestamp(uint256) external view override returns (uint256) {
+        return block.timestamp;
     }
 }
