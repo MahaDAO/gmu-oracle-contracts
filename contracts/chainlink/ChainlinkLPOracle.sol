@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {AggregatorV3Interface} from "../interfaces/AggregatorV3Interface.sol";
 import {IPriceFeed} from "../interfaces/IPriceFeed.sol";
 import {IOracle} from "../interfaces/IOracle.sol";
-import {IUniswapV2Pair} from "../interfaces/IUniswapV2Pair.sol";
+import {ISushiSwapV2Pair} from "../interfaces/ISushiSwapV2Pair.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -16,7 +16,7 @@ interface IERC20WithDeciamls is IERC20 {
 contract ChainlinkLPOracle is IPriceFeed {
     using SafeMath for uint256;
 
-    IUniswapV2Pair public lp;
+    ISushiSwapV2Pair public lp;
     IERC20WithDeciamls public tokenA;
     IERC20WithDeciamls public tokenB;
 
@@ -33,12 +33,8 @@ contract ChainlinkLPOracle is IPriceFeed {
         uint8 decimals;
     }
 
-    constructor(
-        address _tokenAoracle,
-        address _tokenBoracle,
-        address _lp
-    ) {
-        lp = IUniswapV2Pair(_lp);
+    constructor(address _tokenAoracle, address _tokenBoracle, address _lp) {
+        lp = ISushiSwapV2Pair(_lp);
         tokenAoracle = AggregatorV3Interface(_tokenAoracle);
         tokenBoracle = AggregatorV3Interface(_tokenBoracle);
 
@@ -67,11 +63,8 @@ contract ChainlinkLPOracle is IPriceFeed {
 
     function tokenAInLP() public view returns (uint256) {
         uint256 price = tokenAPrice();
-        (
-            uint256 reserve0, /* uint256 reserve1 */ /* uint256 timestamp */
-            ,
-
-        ) = lp.getReserves();
+        (uint256 reserve0 /* uint256 reserve1 */ /* uint256 timestamp */, ) = lp
+            .getReserves();
         uint256 bal = _scalePriceByDigits(reserve0, tokenA.decimals());
         return price.mul(bal).div(1e18);
     }
@@ -81,8 +74,7 @@ contract ChainlinkLPOracle is IPriceFeed {
         (
             ,
             /* uint256 reserve0 */
-            uint256 reserve1, /* uint256 timestamp */
-
+            uint256 reserve1 /* uint256 timestamp */
         ) = lp.getReserves();
         uint256 bal = _scalePriceByDigits(reserve1, tokenB.decimals());
         return price.mul(bal).div(1e18);
@@ -96,37 +88,32 @@ contract ChainlinkLPOracle is IPriceFeed {
         return _fetchWithChainlink(tokenBoracle);
     }
 
-    function _fetchWithChainlink(AggregatorV3Interface agg)
-        internal
-        view
-        returns (uint256)
-    {
+    function _fetchWithChainlink(
+        AggregatorV3Interface agg
+    ) internal view returns (uint256) {
         uint256 chainlinkPrice = _fetchChainlinkPrice(agg);
         return chainlinkPrice;
     }
 
-    function _scalePriceByDigits(uint256 _price, uint256 _answerDigits)
-        internal
-        pure
-        returns (uint256)
-    {
+    function _scalePriceByDigits(
+        uint256 _price,
+        uint256 _answerDigits
+    ) internal pure returns (uint256) {
         // Convert the price returned by the oracle to an 18-digit decimal for use.
         uint256 price;
         if (_answerDigits >= TARGET_DIGITS) {
             // Scale the returned price value down to Liquity's target precision
-            price = _price.div(10**(_answerDigits - TARGET_DIGITS));
+            price = _price.div(10 ** (_answerDigits - TARGET_DIGITS));
         } else if (_answerDigits < TARGET_DIGITS) {
             // Scale the returned price value up to Liquity's target precision
-            price = _price.mul(10**(TARGET_DIGITS - _answerDigits));
+            price = _price.mul(10 ** (TARGET_DIGITS - _answerDigits));
         }
         return price;
     }
 
-    function _fetchChainlinkPrice(AggregatorV3Interface agg)
-        internal
-        view
-        returns (uint256)
-    {
+    function _fetchChainlinkPrice(
+        AggregatorV3Interface agg
+    ) internal view returns (uint256) {
         ChainlinkResponse
             memory chainlinkResponse = _getCurrentChainlinkResponse(agg);
         uint256 scaledChainlinkPrice = _scalePriceByDigits(
@@ -136,11 +123,9 @@ contract ChainlinkLPOracle is IPriceFeed {
         return scaledChainlinkPrice;
     }
 
-    function _getCurrentChainlinkResponse(AggregatorV3Interface agg)
-        internal
-        view
-        returns (ChainlinkResponse memory chainlinkResponse)
-    {
+    function _getCurrentChainlinkResponse(
+        AggregatorV3Interface agg
+    ) internal view returns (ChainlinkResponse memory chainlinkResponse) {
         // First, try to get current decimal precision:
         try agg.decimals() returns (uint8 decimals) {
             // If call to Chainlink succeeds, record the current decimal precision
@@ -154,7 +139,7 @@ contract ChainlinkLPOracle is IPriceFeed {
         try agg.latestRoundData() returns (
             uint80 roundId,
             int256 answer,
-            uint256, /* startedAt */
+            uint256 /* startedAt */,
             uint256 timestamp,
             uint80 /* answeredInRound */
         ) {
