@@ -1,0 +1,22 @@
+{
+  "BTCUSDFeed": {
+    "abi": "AggregatorV3Interface",
+    "verified": true,
+    "address": "0x252f20bdCF8eB39e9636Fd6596E2868Fc1450055"
+  },
+  "USDTUSDFeed": {
+    "abi": "AggregatorV3Interface",
+    "verified": true,
+    "address": "0xFCdaBFEfA72a6713D6199CCae1034703941e8603"
+  },
+  "USDCUSDFeed": {
+    "abi": "AggregatorV3Interface",
+    "verified": true,
+    "address": "0xD5234400c911eb61313EDD058CBBDf28996f378D"
+  },
+  "ETHUSDFeed": {
+    "abi": "AggregatorV3Interface",
+    "verified": true,
+    "address": "0x67cE198632525a909dE7079f013E0774306fd03D"
+  }
+}

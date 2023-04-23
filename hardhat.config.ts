@@ -9,6 +9,10 @@ import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "hardhat-abi-exporter";
 
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-verify";
+
 dotenv.config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -27,6 +31,24 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 const config: HardhatUserConfig & any = {
   vyper: {
     version: "0.2.7",
+  },
+  zksolc: {
+    version: "1.3.8",
+    compilerSource: "binary",
+    settings: {
+      // compilerPath: "zksolc",  // optional. Ignored for compilerSource "docker". Can be used if compiler is located in a specific folder
+      experimental: {
+        dockerImage: "matterlabs/zksolc", // Deprecated! use, compilerSource: "binary"
+        tag: "latest", // Deprecated: used for compilerSource: "docker"
+      },
+      libraries: {}, // optional. References to non-inlinable libraries
+      isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
+      forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
+      optimizer: {
+        enabled: true, // optional. True by default
+        mode: "3", // optional. 3 by default, z to optimize bytecode size
+      },
+    },
   },
   solidity: {
     compilers: [
@@ -86,6 +108,16 @@ const config: HardhatUserConfig & any = {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    era: {
+      url: `https://mainnet.era.zksync.io`,
+      ethNetwork: "ethereum",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      zksync: true,
+      gasPrice: 25000000,
+      verifyURL:
+        "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
     },
   },
   abiExporter: {

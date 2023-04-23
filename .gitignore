@@ -9,3 +9,6 @@ cache
 artifacts
 
 __pycache__
+
+artifacts-zk
+cache-zk
