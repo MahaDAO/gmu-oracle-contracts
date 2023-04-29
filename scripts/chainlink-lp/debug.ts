@@ -3,6 +3,7 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
+import { BigNumber } from "ethers";
 import { deployOrLoadAndVerify } from "../utils";
 
 async function main() {
@@ -12,13 +13,17 @@ async function main() {
 
   // We get the contract to deploy
   const instance = await deployOrLoadAndVerify(
-    "ChainlinkLPOracle",
-    "ChainlinkLPOracle",
+    "ChainlinkUniswapLPOracle",
+    "ChainlinkUniswapLPOracle",
     [tokenUSDTOracle, tokenUSDCOracle, lpToken]
   );
 
-  console.log("fetchPrice():", await instance.fetchPrice());
-  console.log("priceFor():", await instance.priceFor(59716));
+  const e18 = BigNumber.from(10).pow(18);
+  console.log("fetchPrice():", (await instance.fetchPrice()).toString());
+  console.log(
+    "fetchPrice(300):",
+    (await instance.fetchPrice()).mul(300).div(e18).toString()
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere
