@@ -23,14 +23,6 @@ contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
     uint256 public constant maxDelayTime = 86400;
     uint256 public constant TARGET_DIGITS = 8;
 
-    struct ChainlinkResponse {
-        uint80 roundId;
-        int256 answer;
-        uint256 timestamp;
-        bool success;
-        uint8 decimals;
-    }
-
     constructor(address _tokenAoracle, address _tokenBoracle, address _lp) {
         lp = ISushiSwapV2Pair(_lp);
         tokenAoracle = AggregatorV3Interface(_tokenAoracle);
@@ -52,6 +44,8 @@ contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
         return _getCurrentChainlinkResponse(tokenB, tokenBoracle);
     }
 
+    // this code is a port of AlphaHomora's fair LP oracle
+    // https://github.com/AlphaFinanceLab/alpha-homora-v2-contract/blob/master/contracts/oracle/UniswapV2Oracle.sol
     function _fetchPrice() internal view returns (uint) {
         uint256 totalSupply = lp.totalSupply();
         (uint256 r0, uint256 r1) = lp.getReserves();
@@ -73,8 +67,9 @@ contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
                 .div(2 ** 56);
     }
 
-    /// @dev Return token price in ETH, multiplied by 2**112
+    /// @dev Return token price, multiplied by 2**112
     /// @param token Token address to get price
+    /// @param agg Chainlink aggreagtor to pass
     function _getCurrentChainlinkResponse(
         IERC20WithDeciamls token,
         AggregatorV3Interface agg
