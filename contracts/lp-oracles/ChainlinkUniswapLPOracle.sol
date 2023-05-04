@@ -78,10 +78,10 @@ contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
         uint256 _decimals = uint256(token.decimals());
         (, int answer, , uint256 updatedAt, ) = agg.latestRoundData();
 
-        // require(
-        //     updatedAt >= block.timestamp.sub(maxDelayTime),
-        //     "delayed update time"
-        // );
+        require(
+            updatedAt >= block.timestamp.sub(maxDelayTime),
+            "delayed update time"
+        );
 
         return uint256(answer).mul(2 ** 112).div(10 ** _decimals);
     }
