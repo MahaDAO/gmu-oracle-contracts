@@ -3,7 +3,8 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import { deployOrLoadAndVerify } from "../utils";
+import { BigNumber } from "ethers";
+import { deployOrLoad /* deployOrLoadAndVerify */ } from "../utils";
 
 async function main() {
   const tokenUSDTOracle = "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7";
@@ -11,10 +12,17 @@ async function main() {
   const lpToken = "0x79bf7147ebcd0d55e83cb42ed3ba1bb2bb23ef20";
 
   // We get the contract to deploy
-  await deployOrLoadAndVerify(
-    "SLP-USDTUSDC-ChainlinkLPOracle",
-    "ChainlinkLPOracle",
+  const instance = await deployOrLoad(
+    "ChainlinkUniswapLPOracle",
+    "ChainlinkUniswapLPOracle",
     [tokenUSDTOracle, tokenUSDCOracle, lpToken]
+  );
+
+  const e18 = BigNumber.from(10).pow(18);
+  console.log("fetchPrice():", (await instance.fetchPrice()).toString());
+  console.log(
+    "fetchPrice(300):",
+    (await instance.fetchPrice()).mul(300).div(e18).toString()
   );
 }
 

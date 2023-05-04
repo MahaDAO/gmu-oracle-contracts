@@ -8,7 +8,7 @@ import {IERC20WithDeciamls} from "../interfaces/IERC20WithDeciamls.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {GmuMath} from "../utils/GmuMath.sol";
 
-contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
+contract ChainlinkCurveLPOracle is AggregatorV3Interface {
     using SafeMath for uint256;
     using GmuMath for uint256;
 

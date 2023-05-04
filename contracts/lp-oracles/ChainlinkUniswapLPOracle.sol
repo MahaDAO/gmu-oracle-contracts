@@ -33,7 +33,7 @@ contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
     }
 
     function fetchPrice() external view returns (uint256) {
-        return _fetchPrice().mul(1e18).div(2 ** 112);
+        return _fetchPrice();
     }
 
     function tokenAPrice() public view returns (uint256) {
@@ -58,13 +58,14 @@ contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
         // fair token1 amt: sqrtK * sqrt(px0/px1)
         // fair lp price = 2 * sqrt(px0 * px1)
         // split into 2 sqrts multiplication to prevent uint overflow (note the 2**112)
-        return
-            sqrtK
-                .mul(2)
-                .mul(GmuMath.sqrt(px0))
-                .div(2 ** 56)
-                .mul(GmuMath.sqrt(px1))
-                .div(2 ** 56);
+        uint256 answer = sqrtK
+            .mul(2)
+            .mul(GmuMath.sqrt(px0))
+            .div(2 ** 56)
+            .mul(GmuMath.sqrt(px1))
+            .div(2 ** 56);
+
+        return answer.mul(1e18).div(2 ** 112);
     }
 
     /// @dev Return token price, multiplied by 2**112
@@ -77,10 +78,10 @@ contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
         uint256 _decimals = uint256(token.decimals());
         (, int answer, , uint256 updatedAt, ) = agg.latestRoundData();
 
-        require(
-            updatedAt >= block.timestamp.sub(maxDelayTime),
-            "delayed update time"
-        );
+        // require(
+        //     updatedAt >= block.timestamp.sub(maxDelayTime),
+        //     "delayed update time"
+        // );
 
         return uint256(answer).mul(2 ** 112).div(10 ** _decimals);
     }
