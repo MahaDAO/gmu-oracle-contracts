@@ -74,7 +74,7 @@ contract ChainlinkUniswapLPOracle is AggregatorV3Interface {
     function _getCurrentChainlinkResponse(
         IERC20WithDeciamls token,
         AggregatorV3Interface agg
-    ) internal view returns (uint256) {
+    ) internal view virtual returns (uint256) {
         uint256 _decimals = uint256(token.decimals());
         (, int answer, , uint256 updatedAt, ) = agg.latestRoundData();
 
