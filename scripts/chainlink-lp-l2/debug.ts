@@ -4,7 +4,7 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { BigNumber } from "ethers";
-import { /* deployOrLoadAndVerify */ deployOrLoadAndVerify } from "../utils";
+import { deployOrLoadAndVerify } from "../utils";
 
 async function main() {
   const tokenUSDTOracle = "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7";
