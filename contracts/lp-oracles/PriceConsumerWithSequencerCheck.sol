@@ -3,12 +3,6 @@ pragma solidity ^0.8.0;
 
 import {AggregatorV3Interface} from "../interfaces/AggregatorV3Interface.sol";
 
-/**
- * THIS IS AN EXAMPLE CONTRACT THAT USES HARDCODED VALUES FOR CLARITY.
- * THIS IS AN EXAMPLE CONTRACT THAT USES UN-AUDITED CODE.
- * DO NOT USE THIS CODE IN PRODUCTION.
- */
-
 contract PriceConsumerWithSequencerCheck {
     uint256 private constant GRACE_PERIOD_TIME = 3600;
 
